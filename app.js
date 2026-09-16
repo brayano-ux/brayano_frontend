@@ -1,4 +1,4 @@
-const API = window.API_BASE_URL || localStorage.getItem("brayano_api") || "http://localhost:3000";
+const API = window.API_BASE_URL || localStorage.getItem("brayano_api") || "https://brayano-ia-5.onrender.com"
 let orgId = localStorage.getItem("brayano_org");
 let conversations = [];
 let commercialMetrics = [];
