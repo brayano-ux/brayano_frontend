@@ -1377,6 +1377,29 @@
         accent-color: var(--violet);
       }
 
+      .custom-qualification-fields {
+        display: contents;
+      }
+
+      .custom-field-creator {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding-top: 4px;
+      }
+
+      .custom-field-creator input {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .custom-field-creator .ghost-button {
+        padding: 9px 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+      }
+
       .delay-options {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1918,11 +1941,12 @@
               <label><input type="checkbox" name="qualification-field" value="product" /> Produit ou service</label>
               <label><input type="checkbox" name="qualification-field" value="urgency" /> Urgence</label>
               <label><input type="checkbox" name="qualification-field" value="quartier" /> Quartier</label>
-              <label>
-                Champs personnalisés à collecter et transmettre
-                <input id="custom-qualification-fields" placeholder="Ex. quartier, campus, filiere" />
-              </label>
-              <p class="muted">Séparez les champs par des virgules. Utilisez des noms courts sans accents.</p>
+              <div id="custom-qualification-fields" class="custom-qualification-fields"></div>
+              <div class="custom-field-creator">
+                <input id="custom-qualification-field-input" type="text" maxlength="60" placeholder="Ex. campus, filiere, telephone" />
+                <button type="button" class="ghost-button" id="create-qualification-field">Créer</button>
+              </div>
+              <p class="muted">Créez un champ personnalisé : il sera ajouté comme case cochée.</p>
             </fieldset>
             <label>
               Message d'accueil
