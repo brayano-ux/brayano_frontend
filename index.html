@@ -1815,15 +1815,18 @@
                 <h2>Messages reçus par commercial</h2>
                 <p class="muted">Suivez le volume reçu par chaque commercial selon la période.</p>
               </div>
-              <label class="metric-filter">
-                <span>Période</span>
-                <select id="commercial-period">
-                  <option value="today">Aujourd'hui</option>
-                  <option value="7d">7 derniers jours</option>
-                  <option value="30d">30 derniers jours</option>
-                  <option value="all">Tout</option>
-                </select>
-              </label>
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <label class="metric-filter">
+                  <span>Période</span>
+                  <select id="commercial-period">
+                    <option value="today">Aujourd'hui</option>
+                    <option value="7d">7 derniers jours</option>
+                    <option value="30d">30 derniers jours</option>
+                    <option value="all">Tout</option>
+                  </select>
+                </label>
+                <button type="button" class="ghost-button" id="export-prospects">Exporter les prospects</button>
+              </div>
             </div>
             <div id="commercial-metrics-list" class="commercial-list"></div>
           </div>

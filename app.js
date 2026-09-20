@@ -351,6 +351,88 @@ async function loadCommercialMetrics() {
   }
 }
 
+function csvValue(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return `"${text.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+}
+
+function formatExportDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString("fr-FR");
+}
+
+async function exportProspects() {
+  const button = $("#export-prospects");
+  if (!button) return;
+
+  button.disabled = true;
+  const originalLabel = button.textContent;
+  button.textContent = "Préparation...";
+  try {
+    const { conversations: prospects = [] } = await api(`/organizations/${orgId}/prospects/export`);
+    const customFields = [...new Set(prospects.flatMap((prospect) => {
+      const data = prospect.prospectLeads?.[0]?.leadData ?? prospect.leadData;
+      return data && typeof data === "object" && !Array.isArray(data) ? Object.keys(data) : [];
+    }))].sort();
+    const headers = [
+      "ID conversation", "Nom", "WhatsApp", "Date de début", "Dernière activité",
+      "Statut conversation", "IA active", "Qualification", "Score", "Statut lead",
+      "Routage", "Routé", "Date routage", "Ville", "Besoin", "Budget", "Produit",
+      "Urgence", "Zone", "Commercial", "Messages",
+      ...customFields.map((field) => `Champ: ${field}`),
+    ];
+    const rows = prospects.map((prospect) => {
+      const lead = prospect.prospectLeads?.[0] ?? {};
+      const data = lead.leadData && typeof lead.leadData === "object" && !Array.isArray(lead.leadData)
+        ? lead.leadData
+        : prospect.leadData && typeof prospect.leadData === "object" && !Array.isArray(prospect.leadData)
+          ? prospect.leadData
+          : {};
+      const messages = (prospect.messages || []).map((message) => `${message.author}: ${message.content}`).join(" | ");
+      const values = [
+        prospect.id,
+        lead.contactName ?? prospect.contact?.displayName ?? "",
+        lead.whatsappNumber ?? prospect.contact?.whatsappJid ?? "",
+        formatExportDate(prospect.createdAt),
+        formatExportDate(prospect.updatedAt),
+        prospect.status,
+        prospect.aiEnabled ? "Oui" : "Non",
+        prospect.qualificationStatus,
+        prospect.leadScore ?? lead.leadScore ?? "",
+        lead.status ?? "",
+        lead.routeStatus ?? "",
+        lead.isRouted ? "Oui" : "Non",
+        formatExportDate(lead.routedAt),
+        lead.city ?? data.city ?? "",
+        lead.need ?? data.need ?? "",
+        lead.budget ?? data.budget ?? "",
+        lead.product ?? data.product ?? "",
+        lead.urgency ?? data.urgency ?? "",
+        lead.location?.name ?? "",
+        lead.responsible?.name ?? "",
+        messages,
+        ...customFields.map((field) => data[field] ?? ""),
+      ];
+      return values.map(csvValue).join(";");
+    });
+    const csv = `\uFEFF${headers.map(csvValue).join(";")}\r\n${rows.join("\r\n")}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `prospects-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast(`${prospects.length} prospect${prospects.length > 1 ? "s" : ""} exporté${prospects.length > 1 ? "s" : ""}.`);
+  } catch (error) {
+    showToast(error.message || "Impossible d'exporter les prospects.");
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+}
+
 async function loadOrganizations() {
   const data = await api("/organizations");
   const select = $("#org-select");
@@ -743,6 +825,7 @@ if (newOrgButton) {
 }
 
 $("#commercial-period")?.addEventListener("change", renderCommercialMetrics);
+$("#export-prospects")?.addEventListener("click", exportProspects);
 setInterval(updateRealtimeHeader, 1000);
 
 initAuthFlow();
