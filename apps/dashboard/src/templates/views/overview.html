@@ -1,0 +1,116 @@
+<!-- VIEW: OVERVIEW -->
+        <section id="overview-view" class="view">
+          <div class="page-heading">
+            <div>
+              <p id="overview-date" class="eyebrow">DATE</p>
+              <h1>Bonjour <span id="company-greeting">Bienvenue</span> 👋</h1>
+              <p class="muted">Voici ce qui se passe dans votre espace aujourd'hui.</p>
+            </div>
+          </div>
+
+          <div class="status-banner">
+            <span class="status-icon">✦</span>
+            <div>
+              <strong>Votre agent est prêt à échanger.</strong>
+              <p>Il répond automatiquement aux messages reçus sur WhatsApp.</p>
+            </div>
+            <button class="text-button" data-view-target="agent">Configurer l'agent <span>→</span></button>
+          </div>
+
+          <div class="metrics">
+            <article class="metric-card">
+              <span class="metric-icon violet">◫</span>
+              <div>
+                <small>CONVERSATIONS ACTIVES</small>
+                <strong id="metric-active">—</strong>
+                <span class="trend positive">↑ En temps réel</span>
+              </div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon green">↗</span>
+              <div>
+                <small>MESSAGES TRAITÉS</small>
+                <strong id="metric-messages">—</strong>
+                <span class="trend positive">↑ Aujourd'hui</span>
+              </div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon orange">◉</span>
+              <div>
+                <small>STATUT WHATSAPP</small>
+                <strong id="metric-whatsapp">—</strong>
+                <span id="metric-phone" class="trend">Connexion requise</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="panel commercial-panel" style="margin-bottom: 24px;">
+            <div class="panel-heading">
+              <div>
+                <h2>Messages reçus par commercial</h2>
+                <p class="muted">Suivez le volume reçu par chaque commercial selon la période.</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <label class="metric-filter">
+                  <span>Période</span>
+                  <select id="commercial-period">
+                    <option value="today">Aujourd'hui</option>
+                    <option value="7d">7 derniers jours</option>
+                    <option value="30d">30 derniers jours</option>
+                    <option value="all">Tout</option>
+                  </select>
+                </label>
+                <button type="button" class="export-button" id="export-prospects"><span>↓</span> Exporter les prospects</button>
+              </div>
+            </div>
+            <div id="commercial-metrics-list" class="commercial-list"></div>
+          </div>
+
+          <div class="content-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Conversations récentes</h2>
+                  <p class="muted">Les derniers échanges avec vos contacts</p>
+                </div>
+                <button class="ghost-button" data-view-target="inbox">Voir tout →</button>
+              </div>
+              <div id="recent-conversations" class="conversation-list">
+                <div class="empty-state">Chargement des conversations...</div>
+              </div>
+            </section>
+
+            <section class="panel quick-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Actions rapides</h2>
+                  <p class="muted">Gérez votre espace en quelques clics</p>
+                </div>
+              </div>
+              <button class="quick-action" data-view-target="whatsapp">
+                <span class="quick-icon green-bg">◉</span>
+                <div>
+                  <strong>Connecter WhatsApp</strong>
+                  <small>Liez le numéro de votre entreprise</small>
+                </div>
+                <span>→</span>
+              </button>
+              <button class="quick-action" data-view-target="agent">
+                <span class="quick-icon violet-bg">✧</span>
+                <div>
+                  <strong>Personnaliser l'agent</strong>
+                  <small>Adaptez ses réponses à votre activité</small>
+                </div>
+                <span>→</span>
+              </button>
+              <button class="quick-action" data-view-target="inbox">
+                <span class="quick-icon orange-bg">▣</span>
+                <div>
+                  <strong>Ouvrir la boîte de réception</strong>
+                  <small>Répondez aux demandes importantes</small>
+                </div>
+                <span>→</span>
+              </button>
+            </section>
+          </div>
+        </section>

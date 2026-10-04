@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { selectActiveConversation, shouldReactivateAiAfterHandoff } from "./conversations.service.js";
+import { isConversationUpdateCurrent, selectActiveConversation, shouldReactivateAiAfterHandoff } from "./conversations.service.js";
 
 describe("shouldReactivateAiAfterHandoff", () => {
   beforeEach(() => {
@@ -21,6 +21,20 @@ describe("shouldReactivateAiAfterHandoff", () => {
     const recentDate = new Date("2026-01-09T13:30:00.000Z");
 
     expect(shouldReactivateAiAfterHandoff(recentDate)).toBe(false);
+  });
+
+  it("keeps the cooldown active until the exact 24-hour boundary", () => {
+    const handoffAt = new Date("2026-01-09T12:00:00.000Z");
+    expect(shouldReactivateAiAfterHandoff(handoffAt)).toBe(true);
+    expect(shouldReactivateAiAfterHandoff(new Date(handoffAt.getTime() + 1))).toBe(false);
+  });
+});
+
+describe("isConversationUpdateCurrent", () => {
+  it("detects a conversation changed after the AI prepared a response", () => {
+    const aiUpdatedAt = new Date("2026-01-10T12:00:00.000Z");
+    expect(isConversationUpdateCurrent(aiUpdatedAt, aiUpdatedAt)).toBe(true);
+    expect(isConversationUpdateCurrent(new Date(aiUpdatedAt.getTime() + 1), aiUpdatedAt)).toBe(false);
   });
 });
 

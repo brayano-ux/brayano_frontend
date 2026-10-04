@@ -53,9 +53,13 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Organization: 'Organization',
   AiSettings: 'AiSettings',
+  Product: 'Product',
+  BillingPayment: 'BillingPayment',
+  BillingSubscription: 'BillingSubscription',
   User: 'User',
   AllowedEmail: 'AllowedEmail',
   SignupVerification: 'SignupVerification',
+  PasswordResetVerification: 'PasswordResetVerification',
   Session: 'Session',
   WhatsAppAccount: 'WhatsAppAccount',
   Contact: 'Contact',
@@ -88,7 +92,9 @@ export const OrganizationScalarFieldEnum = {
   id: 'id',
   name: 'name',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  freeAiResponsesRemaining: 'freeAiResponsesRemaining',
+  trialUpgradeEmailSentAt: 'trialUpgradeEmailSentAt'
 } as const
 
 export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
@@ -99,6 +105,7 @@ export const AiSettingsScalarFieldEnum = {
   organizationId: 'organizationId',
   agentName: 'agentName',
   businessInfo: 'businessInfo',
+  agentImageUrl: 'agentImageUrl',
   systemPrompt: 'systemPrompt',
   welcomeMessage: 'welcomeMessage',
   qualificationFields: 'qualificationFields',
@@ -109,6 +116,56 @@ export const AiSettingsScalarFieldEnum = {
 } as const
 
 export type AiSettingsScalarFieldEnum = (typeof AiSettingsScalarFieldEnum)[keyof typeof AiSettingsScalarFieldEnum]
+
+
+export const ProductScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  name: 'name',
+  description: 'description',
+  category: 'category',
+  price: 'price',
+  imageUrl: 'imageUrl',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
+
+
+export const BillingPaymentScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  providerReference: 'providerReference',
+  externalReference: 'externalReference',
+  email: 'email',
+  phone: 'phone',
+  plan: 'plan',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingPaymentScalarFieldEnum = (typeof BillingPaymentScalarFieldEnum)[keyof typeof BillingPaymentScalarFieldEnum]
+
+
+export const BillingSubscriptionScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  plan: 'plan',
+  messageLimit: 'messageLimit',
+  messagesUsed: 'messagesUsed',
+  periodStartedAt: 'periodStartedAt',
+  status: 'status',
+  startedAt: 'startedAt',
+  expiresAt: 'expiresAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingSubscriptionScalarFieldEnum = (typeof BillingSubscriptionScalarFieldEnum)[keyof typeof BillingSubscriptionScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {
@@ -150,6 +207,20 @@ export const SignupVerificationScalarFieldEnum = {
 } as const
 
 export type SignupVerificationScalarFieldEnum = (typeof SignupVerificationScalarFieldEnum)[keyof typeof SignupVerificationScalarFieldEnum]
+
+
+export const PasswordResetVerificationScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  codeHash: 'codeHash',
+  expiresAt: 'expiresAt',
+  lastSentAt: 'lastSentAt',
+  attempts: 'attempts',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PasswordResetVerificationScalarFieldEnum = (typeof PasswordResetVerificationScalarFieldEnum)[keyof typeof PasswordResetVerificationScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {
@@ -328,6 +399,14 @@ export const QueryMode = {
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
 export const JsonNullValueFilter = {
   DbNull: DbNull,
   JsonNull: JsonNull,
@@ -335,12 +414,4 @@ export const JsonNullValueFilter = {
 } as const
 
 export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
-
-
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

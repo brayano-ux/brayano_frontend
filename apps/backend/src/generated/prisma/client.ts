@@ -52,6 +52,21 @@ export type Organization = Prisma.OrganizationModel
  */
 export type AiSettings = Prisma.AiSettingsModel
 /**
+ * Model Product
+ * 
+ */
+export type Product = Prisma.ProductModel
+/**
+ * Model BillingPayment
+ * 
+ */
+export type BillingPayment = Prisma.BillingPaymentModel
+/**
+ * Model BillingSubscription
+ * 
+ */
+export type BillingSubscription = Prisma.BillingSubscriptionModel
+/**
  * Model User
  * 
  */
@@ -66,6 +81,11 @@ export type AllowedEmail = Prisma.AllowedEmailModel
  * 
  */
 export type SignupVerification = Prisma.SignupVerificationModel
+/**
+ * Model PasswordResetVerification
+ * 
+ */
+export type PasswordResetVerification = Prisma.PasswordResetVerificationModel
 /**
  * Model Session
  * 

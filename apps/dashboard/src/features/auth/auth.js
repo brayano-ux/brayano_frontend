@@ -92,8 +92,48 @@ export function initAuthFlow(onAuthenticated) {
   const registerForm = $("#register-form");
   const verificationForm = $("#register-verification-form");
   const toggleButton = $("#toggle-auth-mode");
+  const forgotPasswordLink = $("#forgot-password-link");
 
   if (!loginForm || !registerForm || !verificationForm || !toggleButton) return;
+
+  if (forgotPasswordLink) {
+    forgotPasswordLink.onclick = async () => {
+      const email = $("#login-email").value.trim();
+      if (!email) {
+        showToast("Saisissez votre adresse email pour recevoir le code.", "error");
+        $("#login-email").focus();
+        return;
+      }
+
+      try {
+        const result = await api("/password-reset/request", {
+          method: "POST",
+          body: JSON.stringify({ email }),
+        });
+
+        showToast(result.message || "Un code de vérification a été envoyé.", "success");
+        const code = window.prompt("Entrez le code reçu par email :", "");
+        if (!code) {
+          return;
+        }
+
+        const newPassword = window.prompt("Choisissez un nouveau mot de passe (au moins 8 caractères) :", "");
+        if (!newPassword || newPassword.length < 8) {
+          showToast("Le nouveau mot de passe doit contenir au moins 8 caractères.", "error");
+          return;
+        }
+
+        const resetResult = await api("/password-reset/verify", {
+          method: "POST",
+          body: JSON.stringify({ email, code, newPassword }),
+        });
+
+        showToast(resetResult.message || "Mot de passe réinitialisé.", "success");
+      } catch (error) {
+        showToast(error.message || "Impossible de réinitialiser le mot de passe.", "error");
+      }
+    };
+  }
 
   toggleButton.onclick = () => {
     const isLoginHidden = $("#login-form").classList.contains("hidden");

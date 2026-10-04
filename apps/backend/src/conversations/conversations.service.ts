@@ -121,6 +121,10 @@ export function shouldReactivateAiAfterHandoff(lastHandoffAt: Date | string): bo
   return now.getTime() - handoffAt.getTime() >= twentyFourHoursMs;
 }
 
+export function isConversationUpdateCurrent(updatedAt: Date, expectedUpdatedAt: Date): boolean {
+  return updatedAt.getTime() === expectedUpdatedAt.getTime();
+}
+
 export async function setConversationAiEnabled(conversationId: string, aiEnabled: boolean) {
   return prisma.conversation.update({
     where: { id: conversationId },
@@ -143,8 +147,8 @@ export async function updateConversationQualification(
     aiEnabled: boolean;
   },
 ) {
-  return prisma.conversation.update({
-    where: { id: conversationId },
+  const [conversation] = await prisma.conversation.updateManyAndReturn({
+    where: { id: conversationId, status: "OPEN", aiEnabled: true },
     data: {
       qualificationStatus: input.qualificationStatus,
       leadScore: input.leadScore,
@@ -153,6 +157,15 @@ export async function updateConversationQualification(
       aiEnabled: input.aiEnabled,
     },
   });
+  return conversation ?? null;
+}
+
+export async function isConversationUpdateStillCurrent(conversationId: string, expectedUpdatedAt: Date) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { updatedAt: true },
+  });
+  return conversation ? isConversationUpdateCurrent(conversation.updatedAt, expectedUpdatedAt) : false;
 }
 
 export async function getConversationWithMessages(conversationId: string) {

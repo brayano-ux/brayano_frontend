@@ -29,6 +29,7 @@ export interface WhatsAppProvider {
   getStatus(): WhatsAppConnectionStatus;
   getQRCode(): string | null; // data URL (image/png en base64), ou null si non disponible
   sendMessage(jid: string, text: string): Promise<void>;
+  sendImage(jid: string, imageUrl: string, caption?: string): Promise<void>;
   onMessage(handler: (message: IncomingWhatsAppMessage) => void): void;
   onConnectionUpdate(handler: (update: ConnectionUpdatePayload) => void): void;
 }

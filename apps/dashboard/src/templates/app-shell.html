@@ -1,0 +1,56 @@
+<!-- APP SHELL -->
+    <div class="app-shell hidden">
+      <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+      <aside id="sidebar" class="sidebar">
+        <a class="brand" href="#">
+          <span class="brand-mark">✦</span>
+          <span>brayano<span class="brand-accent">.</span></span>
+        </a>
+
+        <div class="workspace-label">ESPACE DE TRAVAIL</div>
+        <label class="org-picker">
+          <span id="org-initial">B</span>
+          <select id="org-select" aria-label="Choisir une entreprise"></select>
+          <span class="chevron">⌄</span>
+        </label>
+
+        <nav class="nav">
+          <button class="nav-item active" data-view="overview"><span>⌂</span> Vue d'ensemble</button>
+          <button class="nav-item" data-view="inbox"><span>◫</span> Conversations <b id="nav-count">0</b></button>
+          <button class="nav-item" data-view="agent"><span>✧</span> Agent IA</button>
+          <button class="nav-item" data-view="products"><span>▧</span> Produits</button>
+          <button class="nav-item" data-view="whatsapp"><span>◉</span> WhatsApp</button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <a class="nav-item" href="./billing.html"><span>¤</span> Facturation</a>
+          <button class="nav-item" data-view="settings"><span>⚙</span> Paramètres</button>
+          <div class="user-card">
+            <span class="avatar">AD</span>
+            <div>
+              <strong>Administrateur</strong>
+              <small>Compte principal</small>
+            </div>
+            <span class="more">···</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div style="display: flex; align-items: center;">
+            <button id="mobile-menu-trigger" class="mobile-menu-trigger" aria-label="Ouvrir le menu">☰</button>
+            <div class="breadcrumb">Centre de pilotage <span>/</span> <strong id="current-org">Brayano</strong></div>
+          </div>
+          <div class="top-actions">
+            <span class="live-dot"></span>
+            <span>Système opérationnel</span>
+            <button class="icon-button" aria-label="Notifications">♢<i></i></button>
+          </div>
+        </header>
+        <div id="views-root"></div>
+      </main>
+    </div>
+
+    <div id="toast" class="toast"></div>

@@ -1,0 +1,32 @@
+<!-- VIEW: WHATSAPP -->
+        <section id="whatsapp-view" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CANAL DE MESSAGERIE</p>
+              <h1>Connexion WhatsApp</h1>
+              <p class="muted">Connectez le numéro de votre entreprise pour activer l'agent.</p>
+            </div>
+          </div>
+          <div class="whatsapp-grid">
+            <section class="panel connect-card">
+              <div class="connection-illustration">◉</div>
+              <h2 id="wa-title">WhatsApp déconnecté</h2>
+              <p id="wa-description" class="muted">Lancez la connexion puis scannez le QR code depuis WhatsApp &gt; Appareils liés.</p>
+              <button class="primary" id="connect-wa">Connecter le numéro</button>
+              <button class="text-button hidden" id="disconnect-wa">Déconnecter ce numéro</button>
+            </section>
+            <section class="panel qr-card">
+              <div class="panel-heading">
+                <div>
+                  <h2>Code de connexion</h2>
+                  <p class="muted">Le code se rafraîchit automatiquement.</p>
+                </div>
+                <span id="qr-status" class="pill warning">En attente</span>
+              </div>
+              <div id="qr-container" class="qr-placeholder">
+                <span>◫</span>
+                <p>Le QR code apparaîtra ici</p>
+              </div>
+            </section>
+          </div>
+        </section>

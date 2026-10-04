@@ -3,20 +3,28 @@ import { env } from "./config/env.js";
 import { aiSettingsRoute } from "./routes/ai-settings.route.js";
 import { aiTestRoute } from "./routes/ai-test.route.js";
 import { authRoute, requireAuth } from "./routes/auth.route.js";
+import { billingRoute } from "./routes/billing.route.js";
 import { conversationsRoute } from "./routes/conversations.route.js";
 import { healthRoute } from "./routes/health.route.js";
 import { organizationsRoute } from "./routes/organizations.route.js";
+import { productsRoute } from "./products/products.route.js";
 import { routingRoute } from "./lead-routing/lead-routing.route.js";
 import { whatsappRoute } from "./routes/whatsapp.route.js";
 import { AppError } from "./shared/errors.js";
+import { isPublicRoute } from "./shared/public-route.js";
 import { restoreWhatsAppConnections } from "./whatsapp/whatsapp.registry.js";
 
 async function buildServer() {
   const app = Fastify({
+    bodyLimit: 5 * 1024 * 1024,
     logger:
       env.NODE_ENV === "development"
         ? { transport: { target: "pino-pretty" } }
         : true,
+  });
+
+  app.addContentTypeParser(/^image\/(jpeg|png|webp)$/, { parseAs: "buffer" }, (_request, body, done) => {
+    done(null, body);
   });
 
   app.addContentTypeParser(
@@ -60,17 +68,26 @@ async function buildServer() {
   );
 
   app.addHook("onRequest", async (request, reply) => {
-    reply.header("Access-Control-Allow-Origin", "*");
-    reply.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-    reply.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    const origin = request.headers.origin;
+    const allowedOrigins = env.CORS_ALLOWED_ORIGINS.split(",").map((value) => value.trim()).filter(Boolean);
+
+    if (origin && allowedOrigins.includes(origin)) {
+      reply.header("Access-Control-Allow-Origin", origin);
+      reply.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+      reply.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    }
+
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("X-Content-Type-Options", "nosniff");
+    reply.header("Referrer-Policy", "no-referrer");
+    reply.header("Permissions-Policy", "geolocation=(), microphone=(), camera=()" );
 
     if (request.method === "OPTIONS") {
       reply.code(204).send();
       return;
     }
 
-    const isPublicRoute = request.url === "/" || request.url === "/login" || request.url === "/register" || request.url.startsWith("/register/") || request.url.startsWith("/health");
-    if (isPublicRoute) {
+    if (isPublicRoute(request.url)) {
       return;
     }
 
@@ -105,7 +122,9 @@ async function buildServer() {
 
   await app.register(healthRoute);
   await app.register(authRoute);
+  await app.register(billingRoute);
   await app.register(organizationsRoute);
+  await app.register(productsRoute);
   await app.register(aiSettingsRoute);
   await app.register(aiTestRoute);
   await app.register(routingRoute);

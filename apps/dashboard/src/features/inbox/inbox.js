@@ -20,6 +20,18 @@ function conversationDetailStatusLabel(conversation) {
   return conversation.aiEnabled ? "Agent IA actif" : "Prise en main humaine";
 }
 
+function handoffCooldownLabel(conversation) {
+  if (conversation.status !== "HUMAN_HANDOFF" || conversation.aiEnabled) return null;
+
+  const remainingMs = new Date(conversation.updatedAt).getTime() + 24 * 60 * 60 * 1000 - Date.now();
+  if (remainingMs <= 0) return null;
+
+  const remainingMinutes = Math.ceil(remainingMs / 60000);
+  const hours = Math.floor(remainingMinutes / 60);
+  const minutes = remainingMinutes % 60;
+  return `IA bloquée encore ${hours} h ${minutes} min`;
+}
+
 function messageBubbleMarkup(message) {
   const isFromContact = message.author === "CONTACT";
   return `
@@ -37,6 +49,7 @@ export async function openConversation(id) {
     const conversation = data.conversation;
     const name = conversation.contact?.displayName || conversation.contact?.whatsappJid || "Contact";
     const statusLabel = conversationDetailStatusLabel(conversation);
+    const cooldownLabel = handoffCooldownLabel(conversation);
     const detailPanel = $("#conversation-detail");
 
     detailPanel.classList.add("has-conversation");
@@ -46,7 +59,7 @@ export async function openConversation(id) {
           <h2>${escapeHtml(name)}</h2>
           <p class="muted">${escapeHtml(statusLabel)}</p>
         </div>
-        <button class="ghost-button" id="toggle-ai">${conversation.aiEnabled ? "Désactiver l'IA" : "Réactiver l'IA"}</button>
+        <button class="ghost-button" id="toggle-ai" ${cooldownLabel ? "disabled" : ""} title="${cooldownLabel || ""}">${cooldownLabel || (conversation.aiEnabled ? "Désactiver l'IA" : "Réactiver l'IA")}</button>
       </div>
       <div class="conversation-thread">${(conversation.messages || []).map(messageBubbleMarkup).join("")}</div>
       <form id="reply-form" class="reply-form">

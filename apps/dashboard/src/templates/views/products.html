@@ -1,0 +1,71 @@
+<!-- VIEW: PRODUCTS -->
+<section id="products-view" class="view hidden">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">CATALOGUE COMMERCIAL</p>
+      <h1>Produits</h1>
+      <p class="muted">Ajoutez vos offres pour que l’agent recommande le bon produit et partage sa photo.</p>
+    </div>
+  </div>
+
+  <div class="products-layout">
+    <form id="product-form" class="panel settings-form product-form">
+      <h2 id="product-form-title">Ajouter un produit</h2>
+
+      <!-- Photo en premier : c'est ce que le client verra sur WhatsApp -->
+      <div class="product-photo-block">
+        <div class="product-image-preview-wrap">
+          <img id="product-image-preview" class="hidden" alt="Aperçu du produit" />
+          <span id="product-image-empty">Aucune photo sélectionnée</span>
+        </div>
+        <label class="product-photo-field">
+          <span class="field-label">Photo du produit</span>
+          <input id="product-image-file" type="file" accept="image/jpeg,image/png,image/webp" />
+          <span class="field-hint">JPEG, PNG ou WebP. L’agent la partage avec le client.</span>
+        </label>
+      </div>
+
+      <label>
+        <span class="field-label">Nom du produit <span class="field-note">(obligatoire)</span></span>
+        <input id="product-name" type="text" maxlength="160" required />
+      </label>
+
+      <label>
+        <span class="field-label">Description et caractéristiques <span class="field-note">(obligatoire)</span></span>
+        <textarea id="product-description" rows="5" maxlength="3000" required></textarea>
+        <span class="field-hint">Matière, tailles, usages, livraison… L’agent s’en sert pour répondre aux questions.</span>
+      </label>
+
+      <div class="product-form-row">
+        <label>
+          <span class="field-label">Catégorie</span>
+          <input id="product-category" type="text" maxlength="120" />
+        </label>
+        <label>
+          <span class="field-label">Prix</span>
+          <input id="product-price" type="text" maxlength="80" placeholder="Ex. 25 000 FCFA" />
+        </label>
+      </div>
+
+      <label id="product-active-label" class="product-active-label hidden">
+        <input id="product-active" type="checkbox" checked />
+        <span>Produit disponible</span>
+      </label>
+
+      <input id="product-id" type="hidden" />
+
+      <div class="product-form-actions">
+        <button id="save-product" type="submit" class="primary">Ajouter au catalogue</button>
+        <button id="cancel-product-edit" type="button" class="ghost-button hidden">Annuler</button>
+      </div>
+    </form>
+
+    <section class="products-list-section">
+      <div class="products-list-heading">
+        <h2>Catalogue</h2>
+        <span id="products-count" class="muted"></span>
+      </div>
+      <div id="products-list" class="products-list" aria-live="polite"></div>
+    </section>
+  </div>
+</section>

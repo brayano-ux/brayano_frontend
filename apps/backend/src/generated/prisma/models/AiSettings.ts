@@ -39,6 +39,7 @@ export type AiSettingsMinAggregateOutputType = {
   organizationId: string | null
   agentName: string | null
   businessInfo: string | null
+  agentImageUrl: string | null
   systemPrompt: string | null
   welcomeMessage: string | null
   aiEnabled: boolean | null
@@ -52,6 +53,7 @@ export type AiSettingsMaxAggregateOutputType = {
   organizationId: string | null
   agentName: string | null
   businessInfo: string | null
+  agentImageUrl: string | null
   systemPrompt: string | null
   welcomeMessage: string | null
   aiEnabled: boolean | null
@@ -65,6 +67,7 @@ export type AiSettingsCountAggregateOutputType = {
   organizationId: number
   agentName: number
   businessInfo: number
+  agentImageUrl: number
   systemPrompt: number
   welcomeMessage: number
   qualificationFields: number
@@ -89,6 +92,7 @@ export type AiSettingsMinAggregateInputType = {
   organizationId?: true
   agentName?: true
   businessInfo?: true
+  agentImageUrl?: true
   systemPrompt?: true
   welcomeMessage?: true
   aiEnabled?: true
@@ -102,6 +106,7 @@ export type AiSettingsMaxAggregateInputType = {
   organizationId?: true
   agentName?: true
   businessInfo?: true
+  agentImageUrl?: true
   systemPrompt?: true
   welcomeMessage?: true
   aiEnabled?: true
@@ -115,6 +120,7 @@ export type AiSettingsCountAggregateInputType = {
   organizationId?: true
   agentName?: true
   businessInfo?: true
+  agentImageUrl?: true
   systemPrompt?: true
   welcomeMessage?: true
   qualificationFields?: true
@@ -216,6 +222,7 @@ export type AiSettingsGroupByOutputType = {
   organizationId: string
   agentName: string
   businessInfo: string | null
+  agentImageUrl: string | null
   systemPrompt: string
   welcomeMessage: string | null
   qualificationFields: runtime.JsonValue | null
@@ -253,6 +260,7 @@ export type AiSettingsWhereInput = {
   organizationId?: Prisma.StringFilter<"AiSettings"> | string
   agentName?: Prisma.StringFilter<"AiSettings"> | string
   businessInfo?: Prisma.StringNullableFilter<"AiSettings"> | string | null
+  agentImageUrl?: Prisma.StringNullableFilter<"AiSettings"> | string | null
   systemPrompt?: Prisma.StringFilter<"AiSettings"> | string
   welcomeMessage?: Prisma.StringNullableFilter<"AiSettings"> | string | null
   qualificationFields?: Prisma.JsonNullableFilter<"AiSettings">
@@ -268,6 +276,7 @@ export type AiSettingsOrderByWithRelationInput = {
   organizationId?: Prisma.SortOrder
   agentName?: Prisma.SortOrder
   businessInfo?: Prisma.SortOrderInput | Prisma.SortOrder
+  agentImageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   systemPrompt?: Prisma.SortOrder
   welcomeMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   qualificationFields?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -286,6 +295,7 @@ export type AiSettingsWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.AiSettingsWhereInput | Prisma.AiSettingsWhereInput[]
   agentName?: Prisma.StringFilter<"AiSettings"> | string
   businessInfo?: Prisma.StringNullableFilter<"AiSettings"> | string | null
+  agentImageUrl?: Prisma.StringNullableFilter<"AiSettings"> | string | null
   systemPrompt?: Prisma.StringFilter<"AiSettings"> | string
   welcomeMessage?: Prisma.StringNullableFilter<"AiSettings"> | string | null
   qualificationFields?: Prisma.JsonNullableFilter<"AiSettings">
@@ -301,6 +311,7 @@ export type AiSettingsOrderByWithAggregationInput = {
   organizationId?: Prisma.SortOrder
   agentName?: Prisma.SortOrder
   businessInfo?: Prisma.SortOrderInput | Prisma.SortOrder
+  agentImageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   systemPrompt?: Prisma.SortOrder
   welcomeMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   qualificationFields?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -323,6 +334,7 @@ export type AiSettingsScalarWhereWithAggregatesInput = {
   organizationId?: Prisma.StringWithAggregatesFilter<"AiSettings"> | string
   agentName?: Prisma.StringWithAggregatesFilter<"AiSettings"> | string
   businessInfo?: Prisma.StringNullableWithAggregatesFilter<"AiSettings"> | string | null
+  agentImageUrl?: Prisma.StringNullableWithAggregatesFilter<"AiSettings"> | string | null
   systemPrompt?: Prisma.StringWithAggregatesFilter<"AiSettings"> | string
   welcomeMessage?: Prisma.StringNullableWithAggregatesFilter<"AiSettings"> | string | null
   qualificationFields?: Prisma.JsonNullableWithAggregatesFilter<"AiSettings">
@@ -336,6 +348,7 @@ export type AiSettingsCreateInput = {
   id?: string
   agentName?: string
   businessInfo?: string | null
+  agentImageUrl?: string | null
   systemPrompt: string
   welcomeMessage?: string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -351,6 +364,7 @@ export type AiSettingsUncheckedCreateInput = {
   organizationId: string
   agentName?: string
   businessInfo?: string | null
+  agentImageUrl?: string | null
   systemPrompt: string
   welcomeMessage?: string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -364,6 +378,7 @@ export type AiSettingsUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   agentName?: Prisma.StringFieldUpdateOperationsInput | string
   businessInfo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
   welcomeMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -379,6 +394,7 @@ export type AiSettingsUncheckedUpdateInput = {
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   agentName?: Prisma.StringFieldUpdateOperationsInput | string
   businessInfo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
   welcomeMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -393,6 +409,7 @@ export type AiSettingsCreateManyInput = {
   organizationId: string
   agentName?: string
   businessInfo?: string | null
+  agentImageUrl?: string | null
   systemPrompt: string
   welcomeMessage?: string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -406,6 +423,7 @@ export type AiSettingsUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   agentName?: Prisma.StringFieldUpdateOperationsInput | string
   businessInfo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
   welcomeMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -420,6 +438,7 @@ export type AiSettingsUncheckedUpdateManyInput = {
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   agentName?: Prisma.StringFieldUpdateOperationsInput | string
   businessInfo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
   welcomeMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -439,6 +458,7 @@ export type AiSettingsCountOrderByAggregateInput = {
   organizationId?: Prisma.SortOrder
   agentName?: Prisma.SortOrder
   businessInfo?: Prisma.SortOrder
+  agentImageUrl?: Prisma.SortOrder
   systemPrompt?: Prisma.SortOrder
   welcomeMessage?: Prisma.SortOrder
   qualificationFields?: Prisma.SortOrder
@@ -457,6 +477,7 @@ export type AiSettingsMaxOrderByAggregateInput = {
   organizationId?: Prisma.SortOrder
   agentName?: Prisma.SortOrder
   businessInfo?: Prisma.SortOrder
+  agentImageUrl?: Prisma.SortOrder
   systemPrompt?: Prisma.SortOrder
   welcomeMessage?: Prisma.SortOrder
   aiEnabled?: Prisma.SortOrder
@@ -470,6 +491,7 @@ export type AiSettingsMinOrderByAggregateInput = {
   organizationId?: Prisma.SortOrder
   agentName?: Prisma.SortOrder
   businessInfo?: Prisma.SortOrder
+  agentImageUrl?: Prisma.SortOrder
   systemPrompt?: Prisma.SortOrder
   welcomeMessage?: Prisma.SortOrder
   aiEnabled?: Prisma.SortOrder
@@ -522,18 +544,11 @@ export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type AiSettingsCreateWithoutOrganizationInput = {
   id?: string
   agentName?: string
   businessInfo?: string | null
+  agentImageUrl?: string | null
   systemPrompt: string
   welcomeMessage?: string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -547,6 +562,7 @@ export type AiSettingsUncheckedCreateWithoutOrganizationInput = {
   id?: string
   agentName?: string
   businessInfo?: string | null
+  agentImageUrl?: string | null
   systemPrompt: string
   welcomeMessage?: string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -576,6 +592,7 @@ export type AiSettingsUpdateWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   agentName?: Prisma.StringFieldUpdateOperationsInput | string
   businessInfo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
   welcomeMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -589,6 +606,7 @@ export type AiSettingsUncheckedUpdateWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   agentName?: Prisma.StringFieldUpdateOperationsInput | string
   businessInfo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
   welcomeMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qualificationFields?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -605,6 +623,7 @@ export type AiSettingsSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   organizationId?: boolean
   agentName?: boolean
   businessInfo?: boolean
+  agentImageUrl?: boolean
   systemPrompt?: boolean
   welcomeMessage?: boolean
   qualificationFields?: boolean
@@ -620,6 +639,7 @@ export type AiSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   organizationId?: boolean
   agentName?: boolean
   businessInfo?: boolean
+  agentImageUrl?: boolean
   systemPrompt?: boolean
   welcomeMessage?: boolean
   qualificationFields?: boolean
@@ -635,6 +655,7 @@ export type AiSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   organizationId?: boolean
   agentName?: boolean
   businessInfo?: boolean
+  agentImageUrl?: boolean
   systemPrompt?: boolean
   welcomeMessage?: boolean
   qualificationFields?: boolean
@@ -650,6 +671,7 @@ export type AiSettingsSelectScalar = {
   organizationId?: boolean
   agentName?: boolean
   businessInfo?: boolean
+  agentImageUrl?: boolean
   systemPrompt?: boolean
   welcomeMessage?: boolean
   qualificationFields?: boolean
@@ -659,7 +681,7 @@ export type AiSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AiSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organizationId" | "agentName" | "businessInfo" | "systemPrompt" | "welcomeMessage" | "qualificationFields" | "aiEnabled" | "responseDelaySeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["aiSettings"]>
+export type AiSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organizationId" | "agentName" | "businessInfo" | "agentImageUrl" | "systemPrompt" | "welcomeMessage" | "qualificationFields" | "aiEnabled" | "responseDelaySeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["aiSettings"]>
 export type AiSettingsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
@@ -680,6 +702,7 @@ export type $AiSettingsPayload<ExtArgs extends runtime.Types.Extensions.Internal
     organizationId: string
     agentName: string
     businessInfo: string | null
+    agentImageUrl: string | null
     systemPrompt: string
     welcomeMessage: string | null
     qualificationFields: runtime.JsonValue | null
@@ -1115,6 +1138,7 @@ export interface AiSettingsFieldRefs {
   readonly organizationId: Prisma.FieldRef<"AiSettings", 'String'>
   readonly agentName: Prisma.FieldRef<"AiSettings", 'String'>
   readonly businessInfo: Prisma.FieldRef<"AiSettings", 'String'>
+  readonly agentImageUrl: Prisma.FieldRef<"AiSettings", 'String'>
   readonly systemPrompt: Prisma.FieldRef<"AiSettings", 'String'>
   readonly welcomeMessage: Prisma.FieldRef<"AiSettings", 'String'>
   readonly qualificationFields: Prisma.FieldRef<"AiSettings", 'Json'>

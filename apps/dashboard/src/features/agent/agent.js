@@ -19,6 +19,18 @@ function renderCustomQualificationFields(fields = []) {
     .join("");
 }
 
+function renderAgentImagePreview(url) {
+  const preview = $("#agent-image-preview");
+  if (!url) {
+    preview.classList.add("hidden");
+    preview.removeAttribute("src");
+    return;
+  }
+
+  preview.src = url;
+  preview.classList.remove("hidden");
+}
+
 export async function loadSettings() {
   try {
     const { settings } = await api(`/organizations/${getState().organizationId}/ai-settings`);
@@ -27,6 +39,8 @@ export async function loadSettings() {
     $("#global-ai-enabled").checked = settings.aiEnabled !== false;
     $("#agent-name").value = settings.agentName || "";
     $("#business-info").value = settings.businessInfo || "";
+    $("#agent-image-url").value = settings.agentImageUrl || "";
+    renderAgentImagePreview(settings.agentImageUrl || "");
     $("#system-prompt").value = settings.systemPrompt || "";
     $("#welcome-message").value = settings.welcomeMessage || "";
 
@@ -37,6 +51,29 @@ export async function loadSettings() {
   } catch (error) {
     showToast(error.message, "error");
   }
+}
+
+async function handleAgentImageUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    showToast("Veuillez choisir un fichier image valide.", "error");
+    event.target.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = typeof reader.result === "string" ? reader.result : "";
+    $("#agent-image-url").value = result;
+    renderAgentImagePreview(result);
+    showToast("Image de l'agent importée avec succès.", "success");
+  };
+  reader.onerror = () => {
+    showToast("Impossible de lire cette image.", "error");
+  };
+  reader.readAsDataURL(file);
 }
 
 async function saveSettings(event) {
@@ -53,6 +90,7 @@ async function saveSettings(event) {
         aiEnabled,
         agentName: $("#agent-name").value,
         businessInfo: $("#business-info").value,
+        agentImageUrl: $("#agent-image-url").value,
         systemPrompt: $("#system-prompt").value,
         welcomeMessage: $("#welcome-message").value,
         qualificationFields,
@@ -136,7 +174,8 @@ async function testAgentReply(event) {
 
     const resultPanel = $("#agent-test-result");
     resultPanel.classList.remove("hidden");
-    resultPanel.textContent = `Qualification : ${result.qualificationStatus} | Score : ${result.leadScore}/100 | Action : ${result.nextAction}`;
+    const selectedProduct = result.productName ? ` | Produit retenu : ${result.productName}` : "";
+    resultPanel.textContent = `Qualification : ${result.qualificationStatus} | Score : ${result.leadScore}/100 | Action : ${result.nextAction}${selectedProduct}`;
   } catch (error) {
     setState({ agentTestHistory: history.slice(0, -1) });
     renderAgentTestHistory();
@@ -151,6 +190,8 @@ async function testAgentReply(event) {
 export function initAgent() {
   $("#agent-form").onsubmit = saveSettings;
   $("#save-agent").onclick = () => $("#agent-form").requestSubmit();
+  $("#agent-image-file").onchange = handleAgentImageUpload;
+  $("#agent-image-url").oninput = () => renderAgentImagePreview($("#agent-image-url").value);
   $("#create-qualification-field").onclick = createQualificationField;
   $("#custom-qualification-field-input").onkeydown = (event) => {
     if (event.key === "Enter") {

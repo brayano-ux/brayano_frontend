@@ -6,11 +6,13 @@ This dashboard is being reorganized around a feature-first structure so it is ea
 
 ```text
 apps/dashboard/
-├── index.html
-├── app.js
-├── styles.css
+├── index.html                 # Document HTML minimal
 ├── src/
-│   ├── app.js
+│   ├── bootstrap.js            # Charge les fragments avant les features
+│   ├── templates/
+│   │   ├── auth.html
+│   │   ├── app-shell.html
+│   │   └── views/               # Une vue HTML par fonctionnalité
 │   ├── config.js
 │   ├── state/
 │   │   └── store.js
@@ -31,7 +33,8 @@ apps/dashboard/
 │   │   │   └── routing.js
 │   │   └── settings/
 │   │       └── settings.js
-│   └── styles/
+│   └── styles/                  # CSS modulaire chargé via main.css
+│       ├── main.css
 │       ├── base.css
 │       ├── layout.css
 │       └── components.css
@@ -55,11 +58,8 @@ apps/dashboard/
 - more consistent spacing and states,
 - better mobile support.
 
-## Migration path
+## Chargement
 
-1. Keep the legacy dashboard working.
-2. Move the app bootstrap to `src/app.js`.
-3. Extract auth, routing and WhatsApp features into modules.
-4. Replace global functions with state-driven UI updates.
-5. Add design tokens and a cleaner component library.
-6. Add real empty/error states and stronger feedback.
+`index.html` fournit uniquement le document et le point d’entrée. `src/bootstrap.js` charge l’authentification, la coquille commune et les vues depuis `src/templates/`, puis importe `src/app.js`. Les vues sont injectées avant l’initialisation des fonctionnalités afin que leurs sélecteurs DOM restent disponibles.
+
+Les styles sont organisés sous `src/styles/` et chargés dans l’ordre par `main.css`. Ajoute une nouvelle vue dans `src/templates/views/`, sa logique dans `src/features/`, son style dans `src/styles/`, puis raccorde son module et son chargeur dans `src/app.js` et `src/bootstrap.js`.

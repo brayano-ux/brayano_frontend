@@ -20,6 +20,26 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: PAYMENT_PROVIDER
+        value: campay
+      - key: CAMPAY_BASE_URL
+        sync: false
+      - key: CAMPAY_USERNAME
+        sync: false
+      - key: CAMPAY_PASSWORD
+        sync: false
+      - key: CAMPAY_CURRENCY
+        value: XAF
+      - key: CAMPAY_DEMO_AMOUNT
+        value: "25"
+      - key: CAMPAY_CALLBACK_URL
+        sync: false
+      - key: BILLING_PAGE_URL
+        sync: false
+      - key: SUPPORT_EMAIL
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: SMTP_HOST
@@ -34,3 +54,5 @@ services:
         sync: false
       - key: WHATSAPP_AUTH_DIR
         value: /data/wa-session
+      - key: PRODUCT_IMAGE_DIR
+        value: /data/product-images

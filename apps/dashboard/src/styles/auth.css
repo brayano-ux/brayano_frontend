@@ -148,6 +148,27 @@
   transform: translateY(0);
 }
 
+.auth-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+#forgot-password-link {
+  color: var(--violet);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+#forgot-password-link:hover {
+  text-decoration: underline;
+}
+
 .auth-hint {
   margin: 22px 0 12px;
   color: var(--muted);

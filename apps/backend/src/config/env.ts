@@ -9,6 +9,22 @@ const envSchema = z.object({
   APP_URL: z.string().url(),
   DATABASE_URL: z.string().min(1, "DATABASE_URL est requis"),
   WHATSAPP_AUTH_DIR: z.string().default("./wa-session"),
+  PRODUCT_IMAGE_DIR: z.string().default("./uploads/products"),
+  CORS_ALLOWED_ORIGINS: z.string().default("http://localhost:5173,http://localhost:3000,http://localhost:4173"),
+  PAYMENT_PROVIDER: z.enum(["campay", "manual"]).default("campay"),
+  CAMPAY_BASE_URL: z.string().url().default("https://demo.campay.net/api"),
+  CAMPAY_USERNAME: z.string().optional().or(z.literal("")),
+  CAMPAY_PASSWORD: z.string().optional().or(z.literal("")),
+  CAMPAY_CURRENCY: z.string().default("XAF"),
+  CAMPAY_DEMO_AMOUNT: z.coerce.number().positive().max(25).default(25),
+  CAMPAY_CALLBACK_URL: z.string().url().optional().or(z.literal("")),
+  BILLING_PAGE_URL: z.string().url().optional().or(z.literal("")),
+  SUPPORT_EMAIL: z.string().email().optional().or(z.literal("")),
+  DEFAULT_ADMIN_EMAIL: z.string().trim().email().optional().or(z.literal("")),
+  DEFAULT_ADMIN_PASSWORD: z.string().min(8).optional().or(z.literal("")),
+  SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 24 * 30),
+  MEDIA_SIGNING_SECRET: z.string().min(16).optional().or(z.literal("")),
+  MEDIA_URL_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60),
   LLM_PROVIDER: z.enum(["gemini", "mistral", "openrouter"]).default("gemini"),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default("gemini-3.6-flash"),
@@ -16,11 +32,11 @@ const envSchema = z.object({
   MISTRAL_MODEL: z.string().default("mistral-small-latest"),
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL: z.string().default("openai/gpt-4o-mini"),
-  SMTP_HOST: z.string().optional(),
+  SMTP_HOST: z.string().optional().or(z.literal("")),
   SMTP_PORT: z.coerce.number().int().positive().default(587),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASSWORD: z.string().optional(),
-  SMTP_FROM: z.string().email().optional(),
+  SMTP_USER: z.string().optional().or(z.literal("")),
+  SMTP_PASSWORD: z.string().optional().or(z.literal("")),
+  SMTP_FROM: z.string().email().optional().or(z.literal("")),
   AI_AGENT_NAME: z.string().default("l'assistant Brayano AI"),
   AI_SYSTEM_PROMPT: z
     .string()
@@ -49,6 +65,14 @@ const envSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ["OPENROUTER_API_KEY"],
       message: "OPENROUTER_API_KEY est requis lorsque LLM_PROVIDER=openrouter",
+    });
+  }
+
+  if (env.NODE_ENV === "production" && (!env.MEDIA_SIGNING_SECRET || env.MEDIA_SIGNING_SECRET.length < 16)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["MEDIA_SIGNING_SECRET"],
+      message: "MEDIA_SIGNING_SECRET doit être défini en production et faire au moins 16 caractères.",
     });
   }
 });

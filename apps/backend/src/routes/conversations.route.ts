@@ -6,8 +6,10 @@ import {
   listProspectsForExport,
   recordOutboundMessage,
   setConversationAiEnabled,
+  shouldReactivateAiAfterHandoff,
 } from "../conversations/conversations.service.js";
-import { NotFoundError, ValidationError } from "../shared/errors.js";
+import { withConversationSendLock } from "../conversations/conversation-send-lock.js";
+import { AppError, NotFoundError, ValidationError } from "../shared/errors.js";
 import { sendWhatsAppMessageForOrg } from "../whatsapp/whatsapp.registry.js";
 
 const replyBodySchema = z.object({
@@ -57,28 +59,34 @@ export async function conversationsRoute(app: FastifyInstance) {
 
     const conversation = await getOwnedConversationOrThrow(orgId, id);
 
-    await sendWhatsAppMessageForOrg(orgId, conversation.contact.whatsappJid, parsed.data.text);
-    const message = await recordOutboundMessage({
-      conversationId: conversation.id,
-      text: parsed.data.text,
-      author: "HUMAN",
+    const message = await withConversationSendLock(id, async () => {
+      await setConversationAiEnabled(id, false);
+      await sendWhatsAppMessageForOrg(orgId, conversation.contact.whatsappJid, parsed.data.text);
+      return recordOutboundMessage({
+        conversationId: conversation.id,
+        text: parsed.data.text,
+        author: "HUMAN",
+      });
     });
-    await setConversationAiEnabled(id, false);
-
     return { message };
   });
 
   app.post("/organizations/:orgId/conversations/:id/ai/enable", async (request) => {
     const { orgId, id } = request.params as { orgId: string; id: string };
-    await getOwnedConversationOrThrow(orgId, id);
-    const conversation = await setConversationAiEnabled(id, true);
+    const conversation = await withConversationSendLock(id, async () => {
+      const current = await getOwnedConversationOrThrow(orgId, id);
+      if (current.status === "HUMAN_HANDOFF" && !shouldReactivateAiAfterHandoff(current.updatedAt)) {
+        throw new AppError("La réactivation de l’IA est disponible 24 heures après le passage à un humain.", 409, "HANDOFF_COOLDOWN");
+      }
+      return setConversationAiEnabled(id, true);
+    });
     return { conversation };
   });
 
   app.post("/organizations/:orgId/conversations/:id/ai/disable", async (request) => {
     const { orgId, id } = request.params as { orgId: string; id: string };
     await getOwnedConversationOrThrow(orgId, id);
-    const conversation = await setConversationAiEnabled(id, false);
+    const conversation = await withConversationSendLock(id, () => setConversationAiEnabled(id, false));
     return { conversation };
   });
 }

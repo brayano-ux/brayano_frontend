@@ -15,6 +15,8 @@ export const aiReplySchema = z.object({
   qualificationStatus: z.enum(["not_qualified", "qualifying", "qualified"]),
   nextAction: z.enum(["continue", "handoff", "stop"]),
   leadData: z.record(z.string(), z.unknown()).default({}),
+  productId: z.string().uuid().optional().or(z.literal("")),
+  imageUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export type AIReply = z.infer<typeof aiReplySchema>;

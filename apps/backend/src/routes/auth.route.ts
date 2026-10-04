@@ -22,9 +22,60 @@ const verifyRegistrationSchema = z.object({
   code: z.string().regex(/^\d{6}$/, "Le code doit contenir 6 chiffres."),
 });
 
+const passwordResetRequestSchema = z.object({
+  email: z.string().email("Adresse email invalide."),
+});
+
+const passwordResetVerifySchema = z.object({
+  email: z.string().email(),
+  code: z.string().regex(/^\d{6}$/, "Le code doit contenir 6 chiffres."),
+  newPassword: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères."),
+});
+
 const resendRegistrationSchema = z.object({ email: z.string().email() });
 
-const VALID_USERS = new Map<string, string>([["admin@brayano.ai", hashPassword("brayano123")]]);
+const VALID_USERS = new Map<string, string>();
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+export function evaluateRateLimit(key: string, limit: number, windowMs: number) {
+  const now = Date.now();
+  const previous = rateLimitMap.get(key);
+
+  if (!previous || previous.resetAt <= now) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+
+  if (previous.count >= limit) {
+    return false;
+  }
+
+  previous.count += 1;
+  rateLimitMap.set(key, previous);
+  return true;
+}
+
+function getClientKey(request: { headers: Record<string, string | string[] | undefined>; ip?: string | undefined }) {
+  const forwarded = request.headers["x-forwarded-for"];
+  const value = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+  return value ?? request.ip ?? "unknown-client";
+}
+
+export function getConfiguredAdminCredentials() {
+  const email = process.env.DEFAULT_ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.DEFAULT_ADMIN_PASSWORD?.trim();
+
+  if (!email || !password) return null;
+  return { email, password };
+}
+
+function registerConfiguredAdmin() {
+  const admin = getConfiguredAdminCredentials();
+  if (!admin) return;
+  VALID_USERS.set(admin.email, hashPassword(admin.password));
+}
+
+registerConfiguredAdmin();
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -34,7 +85,7 @@ function hashPassword(password: string) {
   return createHash("sha256").update(password).digest("hex");
 }
 
-function verifyPassword(password: string, storedHash: string | undefined) {
+export function verifyPassword(password: string, storedHash: string | undefined) {
   if (!storedHash) return false;
   const stored = Buffer.from(storedHash, "utf8");
   const candidate = Buffer.from(hashPassword(password), "utf8");
@@ -45,24 +96,36 @@ function createVerificationCode() {
   return String(randomBytes(4).readUInt32BE(0) % 1000000).padStart(6, "0");
 }
 
+function getSmtpConfig() {
+  const host = process.env.SMTP_HOST ?? env.SMTP_HOST;
+  const user = process.env.SMTP_USER ?? env.SMTP_USER;
+  const password = process.env.SMTP_PASSWORD ?? env.SMTP_PASSWORD;
+  const from = process.env.SMTP_FROM ?? env.SMTP_FROM;
+  const port = Number(process.env.SMTP_PORT ?? env.SMTP_PORT);
+
+  return { host, user, password, from, port };
+}
+
 function isSmtpConfigured() {
-  return Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASSWORD && env.SMTP_FROM);
+  const { host, user, password, from } = getSmtpConfig();
+  return Boolean(host && user && password && from);
 }
 
 async function sendVerificationCode(email: string, code: string) {
+  const smtp = getSmtpConfig();
   if (!isSmtpConfigured()) {
     throw new Error("La messagerie SMTP n'est pas configurée.");
   }
 
   const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_PORT === 465,
-    auth: { user: env.SMTP_USER, pass: env.SMTP_PASSWORD },
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.port === 465,
+    auth: { user: smtp.user, pass: smtp.password },
   });
 
   await transporter.sendMail({
-    from: env.SMTP_FROM,
+    from: smtp.from,
     to: email,
     subject: "Votre code de vérification Brayano AI",
     text: `Votre code de vérification est : ${code}. Il expire dans 10 minutes.`,
@@ -75,7 +138,7 @@ async function withDatabaseFallback<T>(fallback: T, callback: () => Promise<T>):
   try {
     return await callback();
   } catch (error) {
-    if (process.env.NODE_ENV !== "test") {
+    if (process.env.NODE_ENV !== "production") {
       console.warn("[auth] Database unavailable, using fallback behavior:", error);
     }
     return fallback;
@@ -83,7 +146,8 @@ async function withDatabaseFallback<T>(fallback: T, callback: () => Promise<T>):
 }
 
 async function ensureDefaultAdminOrganization(email: string) {
-  if (email !== "admin@brayano.ai") return null;
+  const configuredAdmin = getConfiguredAdminCredentials();
+  if (!configuredAdmin || email !== configuredAdmin.email) return null;
 
   return withDatabaseFallback(FALLBACK_ORGANIZATION_ID, async () => {
     const existingUser = await prisma.user.findUnique({ where: { email }, select: { organizationId: true } });
@@ -98,7 +162,7 @@ async function ensureDefaultAdminOrganization(email: string) {
           organizationId: createdOrganization.id,
           name: "Administrateur",
           email,
-          passwordHash: hashPassword("brayano123"),
+          passwordHash: hashPassword(configuredAdmin.password),
           role: "ADMIN",
         },
       });
@@ -156,6 +220,7 @@ export async function getSessionFromToken(token: string | null) {
 
 async function issueToken(email: string, organizationId?: string) {
   const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + env.SESSION_TTL_SECONDS * 1000);
 
   return withDatabaseFallback(token, async () => {
     const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
@@ -173,13 +238,13 @@ async function issueToken(email: string, organizationId?: string) {
         tokenHash: hashToken(token),
         email,
         organizationId: normalizedOrganizationId,
-        expiresAt: null,
+        expiresAt,
       },
       update: {
         userId: user.id,
         email,
         organizationId: normalizedOrganizationId,
-        expiresAt: null,
+        expiresAt,
         updatedAt: new Date(),
       },
     });
@@ -194,6 +259,12 @@ export async function requireAuth(headerValue: string | undefined) {
 
 export async function authRoute(app: FastifyInstance) {
   app.post("/login", async (request, reply) => {
+    const clientKey = getClientKey(request as { headers: Record<string, string | string[] | undefined>; ip?: string | undefined });
+    if (!evaluateRateLimit(`${clientKey}:login`, 5, 60_000)) {
+      reply.code(429);
+      return { message: "Trop de tentatives. Réessayez dans une minute." };
+    }
+
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) {
       reply.code(400);
@@ -205,6 +276,7 @@ export async function authRoute(app: FastifyInstance) {
 
     try {
       const organizationId = await ensureDefaultAdminOrganization(email);
+      const configuredAdmin = getConfiguredAdminCredentials();
       const storedPassword = VALID_USERS.get(email);
       const dbUser = storedPassword ? null : await prisma.user.findUnique({ where: { email }, select: { organizationId: true, passwordHash: true } });
       const isValidPassword = verifyPassword(password, storedPassword ?? dbUser?.passwordHash);
@@ -214,25 +286,32 @@ export async function authRoute(app: FastifyInstance) {
         return { message: "Email ou mot de passe incorrect." };
       }
 
-      const token = await issueToken(email, organizationId ?? dbUser?.organizationId ?? FALLBACK_ORGANIZATION_ID);
-      return { token, organizationId: organizationId ?? dbUser?.organizationId ?? FALLBACK_ORGANIZATION_ID, user: { email } };
-    } catch (error) {
-      app.log.error(error, "Login failed");
-      if (email === "admin@brayano.ai" && password === "brayano123") {
-        const fallbackToken = randomBytes(32).toString("hex");
-        return {
-          token: fallbackToken,
-          organizationId: FALLBACK_ORGANIZATION_ID,
-          user: { email },
-        };
+      let issuedOrganizationId = organizationId ?? dbUser?.organizationId;
+      if (!issuedOrganizationId && configuredAdmin?.email === email) {
+        issuedOrganizationId = FALLBACK_ORGANIZATION_ID;
       }
 
+      if (!issuedOrganizationId) {
+        reply.code(500);
+        return { message: "Impossible de se connecter pour le moment." };
+      }
+
+      const token = await issueToken(email, issuedOrganizationId);
+      return { token, organizationId: issuedOrganizationId, user: { email } };
+    } catch (error) {
+      app.log.error(error, "Login failed");
       reply.code(500);
       return { message: "Impossible de se connecter pour le moment." };
     }
   });
 
   app.post("/register", async (request, reply) => {
+    const clientKey = getClientKey(request as { headers: Record<string, string | string[] | undefined>; ip?: string | undefined });
+    if (!evaluateRateLimit(`${clientKey}:register`, 3, 60_000)) {
+      reply.code(429);
+      return { message: "Trop de tentatives. Réessayez dans une minute." };
+    }
+
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
       reply.code(400);
@@ -250,78 +329,37 @@ export async function authRoute(app: FastifyInstance) {
         return { message: "Un compte avec cet email existe déjà." };
       }
 
-      if (email !== "admin@brayano.ai") {
-        const allowedEmail = await prisma.allowedEmail.findUnique({ where: { email } });
-        if (!allowedEmail) {
-          reply.code(403);
-          return { message: "Cette adresse email n'est pas autorisée à créer un compte." };
-        }
-
-        const existingVerification = await prisma.signupVerification.findUnique({ where: { email } });
-        if (existingVerification && Date.now() - existingVerification.lastSentAt.getTime() < 60_000) {
-          reply.code(429);
-          return { message: "Un code vient déjà d'être envoyé. Réessayez dans une minute." };
-        }
-
-        const code = createVerificationCode();
-        await sendVerificationCode(email, code);
-        await prisma.signupVerification.upsert({
-          where: { email },
-          update: {
-            name,
-            companyName,
-            passwordHash: hashPassword(parsed.data.password),
-            codeHash: hashToken(code),
-            expiresAt: new Date(Date.now() + 10 * 60_000),
-            lastSentAt: new Date(),
-            attempts: 0,
-            verifiedAt: null,
-          },
-          create: {
-            email,
-            name,
-            companyName,
-            passwordHash: hashPassword(parsed.data.password),
-            codeHash: hashToken(code),
-            expiresAt: new Date(Date.now() + 10 * 60_000),
-            lastSentAt: new Date(),
-          },
-        });
-        return { verificationRequired: true, email, message: "Un code de vérification a été envoyé par email." };
+      const existingVerification = await prisma.signupVerification.findUnique({ where: { email } });
+      if (existingVerification && Date.now() - existingVerification.lastSentAt.getTime() < 60_000) {
+        reply.code(429);
+        return { message: "Un code vient déjà d'être envoyé. Réessayez dans une minute." };
       }
 
-      const organization = await prisma.$transaction(async (tx) => {
-        const createdOrganization = await tx.organization.create({ data: { name: companyName } });
-        const createdUser = await tx.user.create({
-          data: {
-            organizationId: createdOrganization.id,
-            name,
-            email,
-            passwordHash: hashPassword(parsed.data.password),
-            role: "ADMIN",
-          },
-        });
-
-        await tx.aiSettings.create({
-          data: {
-            organizationId: createdOrganization.id,
-            agentName: env.AI_AGENT_NAME,
-            systemPrompt: env.AI_SYSTEM_PROMPT,
-          },
-        });
-
-        return { organization: createdOrganization, user: createdUser };
+      const code = createVerificationCode();
+      await sendVerificationCode(email, code);
+      await prisma.signupVerification.upsert({
+        where: { email },
+        update: {
+          name,
+          companyName,
+          passwordHash: hashPassword(parsed.data.password),
+          codeHash: hashToken(code),
+          expiresAt: new Date(Date.now() + 10 * 60_000),
+          lastSentAt: new Date(),
+          attempts: 0,
+          verifiedAt: null,
+        },
+        create: {
+          email,
+          name,
+          companyName,
+          passwordHash: hashPassword(parsed.data.password),
+          codeHash: hashToken(code),
+          expiresAt: new Date(Date.now() + 10 * 60_000),
+          lastSentAt: new Date(),
+        },
       });
-
-      VALID_USERS.set(email, hashPassword(parsed.data.password));
-      const token = await issueToken(email, organization.organization.id);
-
-      return {
-        token,
-        organizationId: organization.organization.id,
-        organizationName: organization.organization.name,
-        user: { email },
-      };
+      return { verificationRequired: true, email, message: "Un code de vérification a été envoyé par email." };
     } catch (error) {
       app.log.error(error, "Register failed");
       reply.code(500);
@@ -330,6 +368,12 @@ export async function authRoute(app: FastifyInstance) {
   });
 
   app.post("/register/verify", async (request, reply) => {
+    const clientKey = getClientKey(request as { headers: Record<string, string | string[] | undefined>; ip?: string | undefined });
+    if (!evaluateRateLimit(`${clientKey}:verify`, 5, 60_000)) {
+      reply.code(429);
+      return { message: "Trop de tentatives. Réessayez dans une minute." };
+    }
+
     const parsed = verifyRegistrationSchema.safeParse(request.body);
     if (!parsed.success) {
       reply.code(400);
@@ -356,7 +400,7 @@ export async function authRoute(app: FastifyInstance) {
 
     try {
       const organization = await prisma.$transaction(async (tx) => {
-        const createdOrganization = await tx.organization.create({ data: { name: verification.companyName } });
+        const createdOrganization = await tx.organization.create({ data: { name: verification.companyName, freeAiResponsesRemaining: 15 } });
         const createdUser = await tx.user.create({
           data: {
             organizationId: createdOrganization.id,
@@ -384,6 +428,12 @@ export async function authRoute(app: FastifyInstance) {
   });
 
   app.post("/register/resend", async (request, reply) => {
+    const clientKey = getClientKey(request as { headers: Record<string, string | string[] | undefined>; ip?: string | undefined });
+    if (!evaluateRateLimit(`${clientKey}:resend`, 3, 60_000)) {
+      reply.code(429);
+      return { message: "Trop de demandes. Réessayez dans une minute." };
+    }
+
     const parsed = resendRegistrationSchema.safeParse(request.body);
     if (!parsed.success) {
       reply.code(400);
@@ -404,6 +454,98 @@ export async function authRoute(app: FastifyInstance) {
       data: { codeHash: hashToken(code), expiresAt: new Date(Date.now() + 10 * 60_000), lastSentAt: new Date(), attempts: 0 },
     });
     return { message: "Un nouveau code a été envoyé." };
+  });
+
+  app.post("/password-reset/request", async (request, reply) => {
+    const clientKey = getClientKey(request as { headers: Record<string, string | string[] | undefined>; ip?: string | undefined });
+    if (!evaluateRateLimit(`${clientKey}:password-reset-request`, 3, 60_000)) {
+      reply.code(429);
+      return { message: "Trop de demandes. Réessayez dans une minute." };
+    }
+
+    const parsed = passwordResetRequestSchema.safeParse(request.body);
+    if (!parsed.success) {
+      reply.code(400);
+      return { message: parsed.error.issues[0]?.message ?? "Adresse email invalide." };
+    }
+
+    const email = parsed.data.email.trim().toLowerCase();
+    const user = await Promise.resolve(prisma.user.findUnique({ where: { email }, select: { id: true, email: true } })).catch(() => null);
+    if (!user) {
+      return { message: "Si un compte existe avec cette adresse, un code de vérification a été envoyé." };
+    }
+
+    const existingReset = await Promise.resolve(prisma.passwordResetVerification?.findUnique?.({ where: { email } })).catch(() => null);
+    if (existingReset && Date.now() - new Date(existingReset.lastSentAt).getTime() < 60_000) {
+      reply.code(429);
+      return { message: "Un code vient déjà d'être envoyé. Réessayez dans une minute." };
+    }
+
+    const code = createVerificationCode();
+    await sendVerificationCode(email, code);
+    await prisma.passwordResetVerification.upsert({
+      where: { email },
+      update: {
+        codeHash: hashToken(code),
+        expiresAt: new Date(Date.now() + 10 * 60_000),
+        lastSentAt: new Date(),
+        attempts: 0,
+      },
+      create: {
+        email,
+        codeHash: hashToken(code),
+        expiresAt: new Date(Date.now() + 10 * 60_000),
+        lastSentAt: new Date(),
+      },
+    });
+
+    return { message: "Si un compte existe avec cette adresse, un code de vérification a été envoyé." };
+  });
+
+  app.post("/password-reset/verify", async (request, reply) => {
+    const clientKey = getClientKey(request as { headers: Record<string, string | string[] | undefined>; ip?: string | undefined });
+    if (!evaluateRateLimit(`${clientKey}:password-reset-verify`, 5, 60_000)) {
+      reply.code(429);
+      return { message: "Trop de tentatives. Réessayez dans une minute." };
+    }
+
+    const parsed = passwordResetVerifySchema.safeParse(request.body);
+    if (!parsed.success) {
+      reply.code(400);
+      return { message: parsed.error.issues[0]?.message ?? "Code invalide." };
+    }
+
+    const email = parsed.data.email.trim().toLowerCase();
+    const resetVerification = await Promise.resolve(prisma.passwordResetVerification.findUnique({ where: { email } })).catch(() => null);
+    if (!resetVerification || new Date(resetVerification.expiresAt).getTime() <= Date.now()) {
+      reply.code(400);
+      return { message: "Code invalide ou expiré." };
+    }
+
+    if (resetVerification.attempts >= 5) {
+      reply.code(429);
+      return { message: "Nombre maximal de tentatives atteint." };
+    }
+
+    const validCode = hashToken(parsed.data.code) === resetVerification.codeHash;
+    if (!validCode) {
+      await Promise.resolve(prisma.passwordResetVerification.update({ where: { email }, data: { attempts: { increment: 1 } } })).catch(() => undefined);
+      reply.code(400);
+      return { message: "Code incorrect." };
+    }
+
+    const user = await Promise.resolve(prisma.user.findUnique({ where: { email }, select: { id: true } })).catch(() => null);
+    if (!user) {
+      reply.code(404);
+      return { message: "Compte introuvable." };
+    }
+
+    const passwordHash = hashPassword(parsed.data.newPassword);
+    await prisma.user.update({ where: { email }, data: { passwordHash } });
+    VALID_USERS.set(email, passwordHash);
+    await Promise.resolve(prisma.passwordResetVerification.delete({ where: { email } })).catch(() => undefined);
+
+    return { message: "Votre mot de passe a été réinitialisé avec succès." };
   });
 
   app.get("/me", async (request, reply) => {

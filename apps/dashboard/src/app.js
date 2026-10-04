@@ -8,12 +8,13 @@ import { initAgent, loadSettings } from "./features/agent/agent.js";
 import { initDelaySettings, loadDelaySettings } from "./features/settings/delay-settings.js";
 import { initRoutingSettings, loadRoutingConfig } from "./features/settings/routing-settings.js";
 import { initWhatsapp, loadWhatsApp } from "./features/whatsapp/whatsapp.js";
+import { initProducts, loadProducts } from "./features/products/products.js";
 import { isNetworkError } from "./services/api.js";
 import { showToast } from "./utils/dom.js";
 
 /**
  * Point d'entrée du dashboard. Assemble les features indépendantes
- * (auth, navigation, overview, inbox, agent, settings, whatsapp) sans
+ * (auth, navigation, overview, inbox, agent, products, settings, whatsapp) sans
  * qu'aucune d'elles n'ait besoin de connaître les autres directement.
  */
 
@@ -25,6 +26,7 @@ const viewLoaders = {
   overview: refreshAll,
   inbox: renderInbox,
   agent: loadSettings,
+  products: loadProducts,
   settings: () => {
     loadDelaySettings();
     loadRoutingConfig();
@@ -63,6 +65,7 @@ function bootstrap() {
   initOverview();
   initInbox();
   initAgent();
+  initProducts();
   initDelaySettings();
   initRoutingSettings();
   initWhatsapp();
@@ -72,4 +75,8 @@ function bootstrap() {
   initAuthFlow(onAuthenticated);
 }
 
-document.addEventListener("DOMContentLoaded", bootstrap);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+} else {
+  bootstrap();
+}

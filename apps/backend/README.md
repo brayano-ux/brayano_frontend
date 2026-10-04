@@ -27,6 +27,8 @@ npm run db:migrate
 npm run db:generate
 ```
 
+Le catalogue produits utilise la migration `20261003000000_add_product_catalog`. Après avoir vérifié que `DATABASE_URL` cible bien la base locale, applique les migrations avant de démarrer le dashboard.
+
 ## Lancement (développement)
 ```bash
 npm run dev
@@ -53,6 +55,14 @@ Récupère l'`id` retourné (`organizationId`) — c'est la clé de toutes les r
 curl.exe -X PUT http://localhost:3000/organizations/<orgId>/ai-settings -H "Content-Type: application/json" -d "{\"agentName\":\"Assistant École ABC\",\"businessInfo\":\"École ABC propose des formations en informatique et en gestion. Frais d'inscription : 50000 FCFA.\",\"systemPrompt\":\"Ton rôle est d'accueillir les futurs étudiants, répondre à leurs questions sur les formations, et collecter leur nom, la formation recherchée et leur ville.\"}"
 ```
 Si tu ne configures rien, des valeurs génériques par défaut sont utilisées automatiquement à la première conversation.
+
+### Catalogue produits et photos
+
+Dans le dashboard HTML, ouvre **Produits** pour créer une fiche avec son nom, sa description, sa catégorie, son prix et une photo JPEG, PNG ou WebP (5 Mo maximum). Une fiche désactivée n’est pas proposée à l’agent. Les images sont enregistrées dans `PRODUCT_IMAGE_DIR`; configure ce chemin sur un disque persistant en production (`/data/product-images` sur Render et Docker Compose).
+
+L’agent reçoit les fiches actives comme contexte et peut sélectionner leur identifiant lorsqu’un prospect demande une photo. Le backend vérifie cet identifiant dans le catalogue de la même entreprise et transmet l’image stockée, jamais une URL de photo arbitraire produite par le modèle.
+
+Les URLs médias sont publiques afin que WhatsApp puisse récupérer les images. N’y stocke donc que des photos destinées à être partagées avec les prospects.
 
 ### 3. Connecter le numéro WhatsApp de cette entreprise
 ```bash
@@ -96,6 +106,7 @@ curl.exe -X POST http://localhost:3000/organizations/<orgId>/conversations/<id>/
 src/
 ├── config/          # Variables d'environnement
 ├── organizations/   # Création/lecture des entreprises (multi-tenant)
+├── products/        # Catalogue produit et stockage des photos
 ├── whatsapp/        # Adapter Baileys + registre multi-comptes
 ├── ai/              # Orchestrateur IA, providers, base de connaissances (ai_settings)
 ├── conversations/   # Logique conversation

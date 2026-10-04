@@ -1,4 +1,6 @@
 import { prisma } from "../database/client.js";
+import { getOrganizationBillingStatus } from "../billing/subscription.service.js";
+import { AppError } from "../shared/errors.js";
 
 export type RoutingConsent = "unknown" | "granted" | "refused";
 
@@ -136,6 +138,23 @@ export async function createResponsible(
   organizationId: string,
   input: { locationId: string; name: string; whatsappNumber: string; active?: boolean | undefined },
 ) {
+  const billingStatus = await getOrganizationBillingStatus(organizationId);
+  if (billingStatus.status !== "ACTIVE") {
+    throw new AppError("Choisissez une formule active pour configurer un routage commercial.", 402, "SUBSCRIPTION_REQUIRED");
+  }
+  if (billingStatus.responsibleLimit !== null) {
+    const currentCount = await prisma.responsible.count({ where: { organizationId } });
+    const routingSettings = await prisma.organizationRoutingSettings.findUnique({ where: { organizationId } });
+    const standaloneFallbackCount = routingSettings?.active && routingSettings.fallbackWhatsApp && !routingSettings.fallbackResponsibleId ? 1 : 0;
+    if (currentCount + standaloneFallbackCount >= billingStatus.responsibleLimit) {
+      throw new AppError(
+        `Votre formule autorise ${billingStatus.responsibleLimit} commercial${billingStatus.responsibleLimit > 1 ? "aux" : ""}. Passez à une formule supérieure pour en ajouter.`,
+        402,
+        "RESPONSIBLE_LIMIT_REACHED",
+      );
+    }
+  }
+
   const location = await prisma.location.findFirst({ where: { id: input.locationId, organizationId } });
   if (!location) {
     throw new Error("Zone introuvable pour cette organisation.");
@@ -213,6 +232,21 @@ export async function setRoutingFallback(
   input: { fallbackResponsibleId?: string | null | undefined; fallbackWhatsApp?: string | null | undefined; active?: boolean | undefined },
 ) {
   const fallbackResponsibleId = input.fallbackResponsibleId ?? null;
+  const wantsActiveRouting = input.active ?? true;
+  if (wantsActiveRouting) {
+    const billingStatus = await getOrganizationBillingStatus(organizationId);
+    if (billingStatus.status !== "ACTIVE" || billingStatus.responsibleLimit === 0) {
+      throw new AppError("Une formule active est requise pour configurer le routage commercial.", 402, "SUBSCRIPTION_REQUIRED");
+    }
+    if (billingStatus.responsibleLimit !== null && !fallbackResponsibleId && input.fallbackWhatsApp?.trim()) {
+      const responsibleCount = await prisma.responsible.count({ where: { organizationId } });
+      const currentSettings = await prisma.organizationRoutingSettings.findUnique({ where: { organizationId } });
+      const alreadyUsesStandaloneFallback = Boolean(currentSettings?.active && currentSettings.fallbackWhatsApp && !currentSettings.fallbackResponsibleId);
+      if (!alreadyUsesStandaloneFallback && responsibleCount >= billingStatus.responsibleLimit) {
+        throw new AppError("Cette formule n'a plus de place disponible pour un commercial de fallback.", 402, "RESPONSIBLE_LIMIT_REACHED");
+      }
+    }
+  }
   if (fallbackResponsibleId) {
     const responsible = await prisma.responsible.findFirst({ where: { id: fallbackResponsibleId, organizationId } });
     if (!responsible) {
@@ -238,11 +272,24 @@ export async function setRoutingFallback(
 }
 
 export async function getOrganizationRoutingTargets(organizationId: string) {
-  return prisma.location.findMany({
+  const billingStatus = await getOrganizationBillingStatus(organizationId);
+  if (billingStatus.status !== "ACTIVE" || billingStatus.responsibleLimit === 0) return [];
+
+  const [locations, routingSettings] = await Promise.all([prisma.location.findMany({
     where: { organizationId, active: true },
-    include: { responsible: { where: { active: true } } },
+    include: { responsible: { where: { active: true }, orderBy: { name: "asc" } } },
     orderBy: { name: "asc" },
-  });
+  }), prisma.organizationRoutingSettings.findUnique({ where: { organizationId } })]);
+
+  const hasStandaloneFallback = Boolean(routingSettings?.active && routingSettings.fallbackWhatsApp && !routingSettings.fallbackResponsibleId);
+  const targetLimit = billingStatus.responsibleLimit === null
+    ? Number.POSITIVE_INFINITY
+    : Math.max(0, billingStatus.responsibleLimit - (hasStandaloneFallback ? 1 : 0));
+  let included = 0;
+  return locations.map((location) => ({
+    ...location,
+    responsible: location.responsible.filter(() => included++ < targetLimit),
+  }));
 }
 
 export function findBestMatchingLocation(
@@ -346,8 +393,15 @@ export async function resolveRoutingForLead(
   quarter?: string | null,
 ): Promise<LeadRoutingOutcome> {
   const normalizedCity = normalizeCityName(city ?? null);
-  const settings = await getRoutingSettings(organizationId);
-  const fallbackPhone = settings.active
+  const [billingStatus, settings, locations] = await Promise.all([
+    getOrganizationBillingStatus(organizationId),
+    getRoutingSettings(organizationId),
+    getOrganizationRoutingTargets(organizationId),
+  ]);
+  const allowedResponsibleIds = new Set(locations.flatMap((location) => location.responsible.map((responsible) => responsible.id)));
+  const fallbackResponsibleAllowed = !settings.fallbackResponsibleId || allowedResponsibleIds.has(settings.fallbackResponsibleId);
+  const standaloneFallbackAllowed = !settings.fallbackResponsibleId && billingStatus.responsibleLimit !== 0;
+  const fallbackPhone = settings.active && billingStatus.status === "ACTIVE" && fallbackResponsibleAllowed && standaloneFallbackAllowed
     ? settings.fallbackResponsible?.whatsappNumber ?? settings.fallbackWhatsApp ?? ""
     : "";
   const fallbackOutcome: LeadRoutingOutcome = fallbackPhone
@@ -362,7 +416,6 @@ export async function resolveRoutingForLead(
       }
     : { routed: false, routeType: "none", reason: "Aucun fallback WhatsApp actif configuré." };
 
-  const locations = await getOrganizationRoutingTargets(organizationId);
   const matchedLocation = findBestMatchingLocation(locations, city, quarter ?? null);
 
   if (matchedLocation?.responsible?.[0]) {

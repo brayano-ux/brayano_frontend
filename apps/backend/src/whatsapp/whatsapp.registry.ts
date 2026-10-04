@@ -8,12 +8,21 @@ import {
   getRecentHistoryForAi,
   recordInboundMessage,
   recordOutboundMessage,
+  isConversationUpdateStillCurrent,
   setConversationAiEnabled,
   shouldReactivateAiAfterHandoff,
   updateConversationQualification,
 } from "../conversations/conversations.service.js";
+import { withConversationSendLock } from "../conversations/conversation-send-lock.js";
 import { prisma } from "../database/client.js";
+import { getOrganizationBillingStatus, notifyTrialUpgradeEmail, releaseAiResponse, reserveAiResponse, type AiResponseEntitlement } from "../billing/subscription.service.js";
 import { registerQualifiedLead } from "../lead-routing/lead-routing.service.js";
+import {
+  buildProductDetailsMessage,
+  buildProductImageCaption,
+  resolveRequestedProductImage,
+} from "../products/product-image-selection.js";
+import { listProductsForAssistant } from "../products/products.service.js";
 import { BaileysWhatsAppProvider } from "./baileys.provider.js";
 import type {
   IncomingWhatsAppMessage,
@@ -62,8 +71,18 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
   });
 
   instance.onMessage(async (message: IncomingWhatsAppMessage) => {
+    let responseReservation: Extract<AiResponseEntitlement, { allowed: true }> | null = null;
+    let aiResponseDelivered = false;
     try {
       if (message.audio) {
+        const billingStatus = await getOrganizationBillingStatus(organizationId);
+        if (billingStatus.status !== "ACTIVE" || billingStatus.remainingMessages <= 0) {
+          if (billingStatus.plan === "trial" && billingStatus.remainingMessages <= 0) {
+            await notifyTrialUpgradeEmail(organizationId);
+          }
+          console.log(`[billing:${organizationId}] Transcription audio bloquée : accès IA inactif.`);
+          return;
+        }
         const transcription = await getAiOrchestrator().transcribeAudio(message.audio);
         if (!transcription) {
           console.warn(`[org:${organizationId}] Audio reçu sans transcription exploitable.`);
@@ -116,7 +135,14 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
         console.log(`⏸️  [org:${organizationId}] IA désactivée globalement depuis le dashboard.`);
         return;
       }
-      const systemPrompt = buildSystemPrompt({ ...settings, knownLeadData: previousLeadData });
+      const entitlement = await reserveAiResponse(organizationId);
+      if (!entitlement.allowed) {
+        console.log(`[billing:${organizationId}] Réponse IA bloquée : ${entitlement.reason}`);
+        return;
+      }
+      responseReservation = entitlement;
+      const products = await listProductsForAssistant(organizationId);
+      const systemPrompt = buildSystemPrompt({ ...settings, knownLeadData: previousLeadData, products });
       const history = await getRecentHistoryForAi(conversation.id);
       const aiReply = await getAiOrchestrator().getReply(conversation.id, systemPrompt, history);
 
@@ -146,12 +172,12 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
         const value = mergedLeadData[field];
         return typeof value === "string" && value.trim().length > 0;
       });
-      const handoff = hasRequiredData;
-      const stop = aiReply.nextAction === "stop" && hasRequiredData;
+      const handoff = aiReply.needsHuman;
+      const stop = aiReply.nextAction === "stop";
       const qualificationStatus = hasConfiguredQualification && !hasRequiredData && aiReply.qualificationStatus === "qualified"
         ? "QUALIFYING"
         : aiReply.qualificationStatus.toUpperCase();
-      await updateConversationQualification(conversation.id, {
+      const updatedConversation = await updateConversationQualification(conversation.id, {
         qualificationStatus: qualificationStatus as
           | "NOT_QUALIFIED"
           | "QUALIFYING"
@@ -161,6 +187,12 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
         status: handoff ? "HUMAN_HANDOFF" : stop ? "CLOSED" : "OPEN",
         aiEnabled: !handoff && !stop,
       });
+      if (!updatedConversation) {
+        console.log(`[org:${organizationId}] Réponse IA ignorée : la conversation a changé d’état pendant le traitement.`);
+        await releaseAiResponse(organizationId, responseReservation);
+        responseReservation = null;
+        return;
+      }
 
       const hasLeadData = Object.keys(mergedLeadData).length > 0;
       const shouldRegisterLead = hasLeadData || aiReply.qualificationStatus === "qualified" || aiReply.leadScore >= 70;
@@ -185,12 +217,58 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
       }
 
       await waitForConfiguredDelay(replyStartedAt, settings.responseDelaySeconds);
-      await instance.sendMessage(message.fromJid, aiReply.reply);
-      await recordOutboundMessage({
-        conversationId: conversation.id,
-        text: aiReply.reply,
-        author: "AI",
+
+      const imageUrl = resolveRequestedProductImage({
+        message: message.text,
+        productId: aiReply.productId,
+        products,
+        legacyImageUrl: aiReply.imageUrl,
+        configuredLegacyImageUrl: settings.agentImageUrl,
       });
+
+      const selectedProduct = products.find((product) => product.id === aiReply.productId && product.imageUrl === imageUrl);
+      const outboundText = selectedProduct
+        ? buildProductDetailsMessage(aiReply.reply, selectedProduct)
+        : aiReply.reply;
+
+      const responseSent = await withConversationSendLock(conversation.id, async () => {
+        if (!await isConversationUpdateStillCurrent(conversation.id, updatedConversation.updatedAt)) {
+          return false;
+        }
+
+        if (imageUrl) {
+          if (selectedProduct) {
+            await instance.sendMessage(message.fromJid, outboundText);
+            aiResponseDelivered = true;
+            await instance.sendImage(message.fromJid, imageUrl, buildProductImageCaption(selectedProduct));
+          } else {
+            await instance.sendImage(message.fromJid, imageUrl, aiReply.reply);
+            aiResponseDelivered = true;
+          }
+        } else {
+          await instance.sendMessage(message.fromJid, outboundText);
+          aiResponseDelivered = true;
+        }
+
+        await recordOutboundMessage({
+          conversationId: conversation.id,
+          text: outboundText,
+          author: "AI",
+        });
+        return true;
+      });
+      if (!responseSent) {
+        console.log(`[org:${organizationId}] Réponse IA ignorée : un humain a pris le relais avant l’envoi.`);
+        await releaseAiResponse(organizationId, responseReservation);
+        responseReservation = null;
+        return;
+      }
+
+      const completedReservation = responseReservation;
+      responseReservation = null;
+      if (completedReservation?.source === "trial" && completedReservation.remaining === 0) {
+        await notifyTrialUpgradeEmail(organizationId);
+      }
 
       if (aiReply.needsHuman) {
         console.log(
@@ -198,6 +276,15 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
         );
       }
     } catch (error) {
+      if (responseReservation) {
+        if (aiResponseDelivered) {
+          if (responseReservation.source === "trial" && responseReservation.remaining === 0) {
+            await notifyTrialUpgradeEmail(organizationId).catch((emailError) => console.error("Échec de l'email d'essai :", emailError));
+          }
+        } else {
+          await releaseAiResponse(organizationId, responseReservation).catch((releaseError) => console.error("Échec de la restitution du crédit IA :", releaseError));
+        }
+      }
       console.error(`❌ [org:${organizationId}] Échec du traitement du message entrant :`, error);
     }
   });

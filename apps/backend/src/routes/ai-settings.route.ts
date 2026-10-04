@@ -6,9 +6,18 @@ import {
 } from "../ai/ai-settings.service.js";
 import { ValidationError } from "../shared/errors.js";
 
+const validMediaUrl = z
+  .string()
+  .trim()
+  .refine(
+    (value) => !value || /^https?:\/\//i.test(value) || /^data:image\//i.test(value) || /^blob:/i.test(value),
+    "L'URL de l'image doit être une URL HTTP(S), une image data URL ou un blob local.",
+  );
+
 const updateAiSettingsSchema = z.object({
   agentName: z.string().min(1).optional(),
   businessInfo: z.string().optional(),
+  agentImageUrl: validMediaUrl.optional().or(z.literal("")),
   systemPrompt: z.string().min(1).optional(),
   welcomeMessage: z.string().optional(),
   qualificationFields: z.array(z.string().trim().min(1).max(60)).max(30).optional(),
@@ -33,6 +42,7 @@ export async function aiSettingsRoute(app: FastifyInstance) {
     const settingsInput: {
       agentName?: string | undefined;
       businessInfo?: string | undefined;
+      agentImageUrl?: string | undefined;
       systemPrompt?: string | undefined;
       welcomeMessage?: string | undefined;
       qualificationFields?: string[] | undefined;
@@ -42,6 +52,7 @@ export async function aiSettingsRoute(app: FastifyInstance) {
 
     if (parsed.data.agentName !== undefined) settingsInput.agentName = parsed.data.agentName;
     if (parsed.data.businessInfo !== undefined) settingsInput.businessInfo = parsed.data.businessInfo;
+    if (parsed.data.agentImageUrl !== undefined) settingsInput.agentImageUrl = parsed.data.agentImageUrl || undefined;
     if (parsed.data.systemPrompt !== undefined) settingsInput.systemPrompt = parsed.data.systemPrompt;
     if (parsed.data.welcomeMessage !== undefined) settingsInput.welcomeMessage = parsed.data.welcomeMessage;
     if (parsed.data.qualificationFields !== undefined) settingsInput.qualificationFields = parsed.data.qualificationFields;

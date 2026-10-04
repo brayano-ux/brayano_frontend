@@ -168,6 +168,23 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
     await this.socket.sendMessage(jid, { text });
   }
 
+  async sendImage(jid: string, imageUrl: string, caption?: string): Promise<void> {
+    if (!this.socket) {
+      throw new Error("Le socket WhatsApp n'est pas connecté.");
+    }
+
+    const payload: Record<string, unknown> = {
+      image: { url: imageUrl },
+    };
+
+    const normalizedCaption = caption?.trim();
+    if (normalizedCaption) {
+      payload.caption = normalizedCaption;
+    }
+
+    await this.socket.sendMessage(jid, payload as any);
+  }
+
   onMessage(handler: (message: IncomingWhatsAppMessage) => void): void {
     this.messageHandlers.push(handler);
   }

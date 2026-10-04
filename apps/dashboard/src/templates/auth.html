@@ -1,0 +1,56 @@
+<!-- AUTH SCREEN -->
+    <div id="login-screen" class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-brand"><span class="brand-glyph">✦</span>brayano Ai<span class="brand-accent">.</span></div>
+        <p id="auth-title" class="auth-subtitle">Connexion à l'espace de pilotage</p>
+
+        <form id="login-form" class="auth-form" method="post" action="javascript:void(0)">
+          <label>
+            <span>Adresse email</span>
+            <input id="login-email" type="email" placeholder="a@brayano.ai" required />
+          </label>
+          <label>
+            <span>Mot de passe</span>
+            <input id="login-password" type="password" placeholder="••••••••" required />
+          </label>
+          <div class="auth-row">
+            <button type="button" class="text-button" id="forgot-password-link">Mot de passe oublié ?</button>
+          </div>
+          <button type="submit" class="primary auth-submit">Se connecter</button>
+        </form>
+
+        <form id="register-form" class="auth-form hidden" method="post" action="javascript:void(0)">
+          <label>
+            <span>Nom complet</span>
+            <input id="register-name" type="text" placeholder="Brayano" required />
+          </label>
+          <label>
+            <span>Nom de l'entreprise</span>
+            <input id="register-company" type="text" placeholder="Mon entreprise" required />
+          </label>
+          <label>
+            <span>Adresse email</span>
+            <input id="register-email" type="email" placeholder="jean@entreprise.fr" required />
+          </label>
+          <label>
+            <span>Mot de passe</span>
+            <input id="register-password" type="password" placeholder="Minimum 8 caractères" required minlength="8" />
+          </label>
+          <button type="submit" class="primary auth-submit">Créer mon espace</button>
+        </form>
+
+        <form id="register-verification-form" class="auth-form hidden" method="post" action="javascript:void(0)">
+          <label>
+            <span>Code reçu par email</span>
+            <input id="register-verification-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" required />
+          </label>
+          <button type="submit" class="primary auth-submit">Vérifier le code</button>
+          <button id="resend-registration-code" type="button" class="text-button" disabled>Renvoyer le code</button>
+        </form>
+
+        <p class="auth-hint">
+          <span id="auth-mode-hint">Accédez à votre espace de pilotage</span>
+        </p>
+        <button id="toggle-auth-mode" type="button" class="text-button">Créer un compte</button>
+      </div>
+    </div>

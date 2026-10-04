@@ -4,8 +4,9 @@ WORKDIR /app
 
 ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
 ENV WHATSAPP_AUTH_DIR=/data/wa-session
+ENV PRODUCT_IMAGE_DIR=/data/product-images
 
-RUN mkdir -p /data/wa-session
+RUN mkdir -p /data/wa-session /data/product-images
 
 COPY package*.json ./
 

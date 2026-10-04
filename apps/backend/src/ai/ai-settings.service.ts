@@ -10,6 +10,7 @@ export type ResponseDelaySeconds = (typeof RESPONSE_DELAY_OPTIONS)[number];
 export interface AiSettingsInput {
   agentName?: string | undefined;
   businessInfo?: string | undefined;
+  agentImageUrl?: string | undefined;
   systemPrompt?: string | undefined;
   welcomeMessage?: string | undefined;
   qualificationFields?: string[] | undefined;
@@ -42,6 +43,7 @@ export async function getOrCreateAiSettings(organizationId: string) {
       organizationId,
       agentName: env.AI_AGENT_NAME,
       systemPrompt: env.AI_SYSTEM_PROMPT,
+      agentImageUrl: null,
       responseDelaySeconds: DEFAULT_RESPONSE_DELAY_SECONDS,
     },
   });
@@ -57,6 +59,7 @@ export async function updateAiSettings(organizationId: string, input: AiSettings
     ...(input.agentName !== undefined ? { agentName: input.agentName } : {}),
     ...(input.systemPrompt !== undefined ? { systemPrompt: input.systemPrompt } : {}),
     ...(input.businessInfo !== undefined ? { businessInfo: input.businessInfo || null } : {}),
+    ...(input.agentImageUrl !== undefined ? { agentImageUrl: input.agentImageUrl || null } : {}),
     ...(input.welcomeMessage !== undefined ? { welcomeMessage: input.welcomeMessage || null } : {}),
     ...(input.qualificationFields !== undefined ? { qualificationFields: input.qualificationFields } : {}),
     ...(input.aiEnabled !== undefined ? { aiEnabled: input.aiEnabled } : {}),
@@ -73,6 +76,7 @@ export async function updateAiSettings(organizationId: string, input: AiSettings
       agentName: input.agentName ?? env.AI_AGENT_NAME,
       systemPrompt: input.systemPrompt ?? env.AI_SYSTEM_PROMPT,
       businessInfo: input.businessInfo ?? null,
+      agentImageUrl: input.agentImageUrl ?? null,
       welcomeMessage: input.welcomeMessage ?? null,
       qualificationFields: input.qualificationFields ?? [],
       aiEnabled: input.aiEnabled ?? true,
