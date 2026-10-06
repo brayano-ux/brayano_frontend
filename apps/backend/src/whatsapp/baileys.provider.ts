@@ -22,6 +22,11 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
   private socket: WASocket | null = null;
   private status: WhatsAppConnectionStatus = "DISCONNECTED";
   private qrDataUrl: string | null = null;
+  private pairingCode: string | null = null;
+  private pairingCodeRequested = false;
+  private pairingSocketReady = false;
+  private pairingReadyResolve: (() => void) | null = null;
+  private pairingReadyReject: ((error: Error) => void) | null = null;
 
   private messageHandlers: Array<(message: IncomingWhatsAppMessage) => void> = [];
   private connectionHandlers: Array<(update: ConnectionUpdatePayload) => void> = [];
@@ -45,12 +50,19 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
-        this.qrDataUrl = await QRCode.toDataURL(qr);
-        this.setStatus("QR_PENDING");
+        this.pairingSocketReady = true;
+        this.resolvePairingSocketReady();
+        if (!this.pairingCodeRequested) {
+          this.qrDataUrl = await QRCode.toDataURL(qr);
+          this.setStatus("QR_PENDING");
+        }
       }
 
       if (connection === "open") {
+        this.rejectPairingSocketReady(new Error("Ce numéro WhatsApp est déjà connecté."));
         this.qrDataUrl = null;
+        this.pairingCode = null;
+        this.pairingCodeRequested = false;
         const phoneNumber = this.socket?.user?.id?.split(":")[0];
         this.setStatus("CONNECTED", phoneNumber);
       }
@@ -60,7 +72,11 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
           ?.statusCode;
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
+        this.pairingSocketReady = false;
+        this.rejectPairingSocketReady(new Error("WhatsApp a fermé la connexion avant de préparer le code."));
         this.qrDataUrl = null;
+        this.pairingCode = null;
+        this.pairingCodeRequested = false;
         this.setStatus("DISCONNECTED");
 
         if (shouldReconnect) {
@@ -147,6 +163,37 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
     });
   }
 
+  async connectWithPairingCode(phoneNumber: string): Promise<string> {
+    if (this.status === "CONNECTED") {
+      throw new Error("Ce numéro WhatsApp est déjà connecté.");
+    }
+
+    this.pairingCodeRequested = true;
+    if (!this.socket) {
+      await this.connect();
+    }
+
+    if (!this.socket) {
+      this.pairingCodeRequested = false;
+      throw new Error("La connexion WhatsApp n'a pas pu être initialisée.");
+    }
+
+    try {
+      if (!this.pairingSocketReady) {
+        await this.waitForPairingSocketReady();
+      }
+
+      const code = await this.socket.requestPairingCode(phoneNumber);
+      this.qrDataUrl = null;
+      this.pairingCode = code;
+      this.setStatus("QR_PENDING");
+      return code;
+    } catch (error) {
+      this.pairingCodeRequested = false;
+      throw error;
+    }
+  }
+
   async disconnect(): Promise<void> {
     await this.socket?.logout();
     this.socket = null;
@@ -159,6 +206,39 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
 
   getQRCode(): string | null {
     return this.qrDataUrl;
+  }
+
+  getPairingCode(): string | null {
+    return this.pairingCode;
+  }
+
+  private waitForPairingSocketReady(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.rejectPairingSocketReady(new Error("WhatsApp n'a pas préparé le code à temps. Réessayez."));
+      }, 20000);
+
+      this.pairingReadyResolve = () => {
+        clearTimeout(timeout);
+        this.pairingReadyResolve = null;
+        this.pairingReadyReject = null;
+        resolve();
+      };
+      this.pairingReadyReject = (error) => {
+        clearTimeout(timeout);
+        this.pairingReadyResolve = null;
+        this.pairingReadyReject = null;
+        reject(error);
+      };
+    });
+  }
+
+  private resolvePairingSocketReady(): void {
+    this.pairingReadyResolve?.();
+  }
+
+  private rejectPairingSocketReady(error: Error): void {
+    this.pairingReadyReject?.(error);
   }
 
   async sendMessage(jid: string, text: string): Promise<void> {

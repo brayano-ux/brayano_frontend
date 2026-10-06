@@ -82,6 +82,46 @@
   padding-inline: 26px;
 }
 
+#whatsapp-view #show-pairing-form {
+  margin-top: 12px;
+}
+
+#whatsapp-view .pairing-form {
+  display: grid;
+  width: min(100%, 340px);
+  gap: 10px;
+  margin-top: 18px;
+  text-align: left;
+}
+
+#whatsapp-view .pairing-form label {
+  color: var(--ink-light);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#whatsapp-view .pairing-form input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+
+#whatsapp-view .pairing-form input:focus-visible {
+  outline: 3px solid var(--violet-glow);
+  outline-offset: 2px;
+}
+
+#whatsapp-view .pairing-form button {
+  justify-self: center;
+  min-height: 42px;
+  margin-top: 2px;
+}
+
 #whatsapp-view #disconnect-wa {
   margin-top: 16px;
   padding: 10px 16px;
@@ -226,6 +266,18 @@
 #whatsapp-view .qr-placeholder p {
   margin: 0;
   font-size: 13px;
+}
+
+#whatsapp-view .pairing-code-placeholder > div {
+  max-width: 360px;
+}
+
+#whatsapp-view .pairing-code-placeholder strong {
+  display: block;
+  margin-top: 18px;
+  color: var(--ink);
+  font: 700 30px "Space Grotesk", sans-serif;
+  letter-spacing: 0;
 }
 
 /* Quand le QR code est affiché : cadre blanc (indispensable pour bien scanner) */

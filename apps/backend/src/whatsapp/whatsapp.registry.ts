@@ -283,6 +283,35 @@ export async function connectWhatsAppAccount(organizationId: string): Promise<vo
   await attempt;
 }
 
+export async function connectWhatsAppAccountWithPairingCode(
+  organizationId: string,
+  phoneNumber: string,
+): Promise<string> {
+  const currentAttempt = connectionAttempts.get(organizationId);
+  if (currentAttempt) await currentAttempt;
+
+  const existingProvider = providers.get(organizationId);
+  if (existingProvider?.getStatus() === "DISCONNECTED") {
+    providers.delete(organizationId);
+  }
+
+  const provider = getOrCreateProvider(organizationId);
+  if (!provider.connectWithPairingCode) {
+    throw new Error("Ce fournisseur WhatsApp ne prend pas en charge le code d'association.");
+  }
+
+  const pairingAttempt = provider.connectWithPairingCode(phoneNumber);
+  const trackedAttempt = pairingAttempt
+    .then(() => undefined, () => undefined)
+    .finally(() => {
+      if (connectionAttempts.get(organizationId) === trackedAttempt) {
+        connectionAttempts.delete(organizationId);
+      }
+    });
+  connectionAttempts.set(organizationId, trackedAttempt);
+  return pairingAttempt;
+}
+
 export async function disconnectWhatsAppAccount(organizationId: string): Promise<void> {
   connectionAttempts.delete(organizationId);
   const provider = providers.get(organizationId);
@@ -323,6 +352,10 @@ export function getWhatsAppAccountStatus(organizationId: string): WhatsAppConnec
 
 export function getWhatsAppAccountQr(organizationId: string): string | null {
   return providers.get(organizationId)?.getQRCode() ?? null;
+}
+
+export function getWhatsAppAccountPairingCode(organizationId: string): string | null {
+  return providers.get(organizationId)?.getPairingCode?.() ?? null;
 }
 
 export async function sendWhatsAppMessageForOrg(

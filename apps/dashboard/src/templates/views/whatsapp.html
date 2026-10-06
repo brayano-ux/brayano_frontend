@@ -16,16 +16,22 @@
       </div>
 
       <h2 id="wa-title">WhatsApp déconnecté</h2>
-      <p id="wa-description" class="muted">Lancez la connexion puis scannez le QR code depuis WhatsApp &gt; Appareils liés.</p>
+      <p id="wa-description" class="muted">Connectez WhatsApp en scannant le QR code ou en recevant un code d'association.</p>
 
-      <button class="primary" id="connect-wa">Connecter le numéro</button>
+      <button class="primary" id="connect-wa" type="button">Connexion par QR code</button>
+      <button class="text-button" id="show-pairing-form" type="button" aria-expanded="false" aria-controls="pairing-code-form">Utiliser un code d'association</button>
+      <form id="pairing-code-form" class="pairing-form hidden">
+        <label for="pairing-phone">Numéro WhatsApp avec indicatif pays</label>
+        <input id="pairing-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+237 6..." required />
+        <button class="primary" id="connect-with-code" type="submit">Recevoir le code</button>
+      </form>
       <button class="text-button hidden" id="disconnect-wa">Déconnecter ce numéro</button>
 
       <!-- Le guide disparaît tout seul quand le numéro est connecté (voir whatsapp.css) -->
       <ol class="wa-steps" aria-label="Étapes de connexion">
-        <li>Cliquez sur « Connecter le numéro » pour afficher le QR code.</li>
-        <li>Sur votre téléphone, ouvrez WhatsApp puis <strong>Appareils liés</strong>.</li>
-        <li>Ajoutez un appareil et scannez le QR code affiché ici.</li>
+        <li>Choisissez le QR code ou saisissez votre numéro avec son indicatif pays.</li>
+        <li>Dans WhatsApp, ouvrez <strong>Appareils liés</strong> puis <strong>Lier un appareil</strong>.</li>
+        <li>Scannez le QR code ou choisissez « Lier avec un numéro de téléphone » et saisissez le code.</li>
       </ol>
     </section>
 

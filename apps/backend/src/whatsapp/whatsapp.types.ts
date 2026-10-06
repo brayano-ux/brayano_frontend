@@ -25,9 +25,11 @@ export interface ConnectionUpdatePayload {
  */
 export interface WhatsAppProvider {
   connect(): Promise<void>;
+  connectWithPairingCode?(phoneNumber: string): Promise<string>;
   disconnect(): Promise<void>;
   getStatus(): WhatsAppConnectionStatus;
   getQRCode(): string | null; // data URL (image/png en base64), ou null si non disponible
+  getPairingCode?(): string | null;
   sendMessage(jid: string, text: string): Promise<void>;
   sendImage(jid: string, imageUrl: string, caption?: string): Promise<void>;
   onMessage(handler: (message: IncomingWhatsAppMessage) => void): void;

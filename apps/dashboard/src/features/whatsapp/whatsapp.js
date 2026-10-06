@@ -11,16 +11,40 @@ export async function loadWhatsApp() {
     const orgId = getState().organizationId;
     const { status } = await api(`/organizations/${orgId}/whatsapp/status`);
     const connected = status === "CONNECTED";
-
-    $("#wa-title").textContent = connected ? "WhatsApp connecté" : status === "QR_PENDING" ? "Scannez le QR code" : "WhatsApp déconnecté";
-    $("#qr-status").textContent = connected ? "Connecté" : status === "QR_PENDING" ? "QR disponible" : "En attente";
-    $("#qr-status").className = `pill ${connected ? "" : "warning"}`;
-    $("#disconnect-wa").classList.toggle("hidden", !connected);
+    let pairingCode = null;
 
     if (status === "QR_PENDING") {
-      const result = await api(`/organizations/${orgId}/whatsapp/qr`);
-      $("#qr-container").innerHTML = `<img src="${result.qr}" alt="QR code WhatsApp" />`;
+      try {
+        ({ code: pairingCode } = await api(`/organizations/${orgId}/whatsapp/pairing-code`));
+      } catch {
+        pairingCode = null;
+      }
+    }
+
+    $("#wa-title").textContent = connected ? "WhatsApp connecté" : pairingCode ? "Saisissez le code dans WhatsApp" : status === "QR_PENDING" ? "Scannez le QR code" : "WhatsApp déconnecté";
+    $("#qr-status").textContent = connected ? "Connecté" : pairingCode ? "Code prêt" : status === "QR_PENDING" ? "QR disponible" : "En attente";
+    $("#qr-status").className = `pill ${connected ? "" : "warning"}`;
+    $("#disconnect-wa").classList.toggle("hidden", !connected);
+    $("#connect-wa").classList.toggle("hidden", connected);
+    $("#show-pairing-form").classList.toggle("hidden", connected);
+    if (connected) {
+      $("#pairing-code-form").classList.add("hidden");
+      $("#show-pairing-form").setAttribute("aria-expanded", "false");
+      $("#show-pairing-form").textContent = "Utiliser un code d'association";
+    }
+
+    if (status === "QR_PENDING") {
+      if (pairingCode) {
+        $("#qr-container").className = "qr-placeholder pairing-code-placeholder";
+        $("#qr-container").innerHTML = '<div><p>Sur votre téléphone, choisissez « Lier avec un numéro de téléphone » puis saisissez :</p><strong id="pairing-code-value"></strong></div>';
+        $("#pairing-code-value").textContent = pairingCode;
+      } else {
+        const result = await api(`/organizations/${orgId}/whatsapp/qr`);
+        $("#qr-container").className = "qr-placeholder";
+        $("#qr-container").innerHTML = `<img src="${result.qr}" alt="QR code WhatsApp" />`;
+      }
     } else if (!connected) {
+      $("#qr-container").className = "qr-placeholder";
       $("#qr-container").innerHTML = '<span>◫</span><p>Le QR code apparaîtra ici</p>';
     }
   } catch (error) {
@@ -61,6 +85,27 @@ async function connectWhatsApp() {
   }
 }
 
+async function connectWhatsAppWithCode(event) {
+  event.preventDefault();
+  const button = $("#connect-with-code");
+  const phoneNumber = $("#pairing-phone").value.trim();
+  try {
+    button.disabled = true;
+    $("#connect-wa").disabled = true;
+    await api(`/organizations/${getState().organizationId}/whatsapp/connect-with-code`, {
+      method: "POST",
+      body: JSON.stringify({ phoneNumber }),
+    });
+    showToast("Code d'association généré", "success");
+    await loadWhatsApp();
+  } catch (error) {
+    showToast(error.message, "error");
+  } finally {
+    button.disabled = false;
+    $("#connect-wa").disabled = false;
+  }
+}
+
 async function disconnectWhatsApp() {
   const confirmed = window.confirm("Voulez-vous vraiment déconnecter ce numéro WhatsApp ?");
   if (!confirmed) return;
@@ -76,5 +121,15 @@ async function disconnectWhatsApp() {
 
 export function initWhatsapp() {
   $("#connect-wa").onclick = connectWhatsApp;
+  $("#show-pairing-form").onclick = () => {
+    const form = $("#pairing-code-form");
+    const button = $("#show-pairing-form");
+    const isOpening = form.classList.contains("hidden");
+    form.classList.toggle("hidden", !isOpening);
+    button.setAttribute("aria-expanded", String(isOpening));
+    button.textContent = isOpening ? "Masquer la saisie du numéro" : "Utiliser un code d'association";
+    if (isOpening) $("#pairing-phone").focus();
+  };
+  $("#pairing-code-form").onsubmit = connectWhatsAppWithCode;
   $("#disconnect-wa").onclick = disconnectWhatsApp;
 }

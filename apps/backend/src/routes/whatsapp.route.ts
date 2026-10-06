@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import {
   connectWhatsAppAccount,
+  connectWhatsAppAccountWithPairingCode,
   disconnectWhatsAppAccount,
+  getWhatsAppAccountPairingCode,
   getWhatsAppAccountQr,
   getWhatsAppAccountStatus,
 } from "../whatsapp/whatsapp.registry.js";
@@ -20,6 +22,16 @@ export async function whatsappRoute(app: FastifyInstance) {
       return { message: "Aucun QR code disponible pour le moment." };
     }
     return { qr };
+  });
+
+  app.get("/organizations/:orgId/whatsapp/pairing-code", async (request, reply) => {
+    const { orgId } = request.params as { orgId: string };
+    const code = getWhatsAppAccountPairingCode(orgId);
+    if (!code) {
+      reply.status(404);
+      return { message: "Aucun code d'association disponible pour le moment." };
+    }
+    return { code };
   });
 
   // Page pratique pour scanner sans manipuler le JSON à la main.
@@ -55,6 +67,41 @@ export async function whatsappRoute(app: FastifyInstance) {
     await connectWhatsAppAccount(orgId);
     return {
       message: "Connexion WhatsApp initiée.",
+      status: getWhatsAppAccountStatus(orgId),
+    };
+  });
+
+  app.post("/organizations/:orgId/whatsapp/connect-with-code", async (request, reply) => {
+    const { orgId } = request.params as { orgId: string };
+    const body = request.body as { phoneNumber?: unknown } | undefined;
+    const input = typeof body?.phoneNumber === "string" ? body.phoneNumber.trim() : "";
+    if (!/^\+?[\d\s().-]+$/.test(input)) {
+      reply.status(400);
+      return { message: "Saisissez un numéro WhatsApp avec son indicatif pays." };
+    }
+
+    const phoneNumber = input.replace(/\D/g, "");
+    if (!/^[1-9]\d{7,14}$/.test(phoneNumber)) {
+      reply.status(400);
+      return { message: "Le numéro doit contenir l'indicatif pays et entre 8 et 15 chiffres." };
+    }
+
+    let code: string;
+    try {
+      code = await connectWhatsAppAccountWithPairingCode(orgId, phoneNumber);
+    } catch (error) {
+      request.log.error({ err: error, orgId }, "Échec de génération du code d'association WhatsApp");
+      reply.status(502);
+      return {
+        message: error instanceof Error
+          ? error.message
+          : "WhatsApp n'a pas pu générer le code. Réessayez.",
+      };
+    }
+
+    return {
+      message: "Code d'association WhatsApp généré.",
+      code,
       status: getWhatsAppAccountStatus(orgId),
     };
   });
