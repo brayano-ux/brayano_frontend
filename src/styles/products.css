@@ -1,0 +1,402 @@
+/* =========================================================
+   Vue Produits — remplace tout le bloc CSS .products-* / .product-*
+   Utilise vos variables existantes (avec valeurs de secours).
+   Note : on ne force jamais "display" sur les éléments qui reçoivent
+   la classe .hidden (label disponibilité, aperçu, bouton Annuler).
+   ========================================================= */
+
+.products-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+}
+
+/* ---------- Formulaire ---------- */
+.products-layout .product-form {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+  max-width: none;
+  padding: 24px;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.product-form h2,
+.products-list-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.products-layout .product-form label {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-light, #1f2933);
+}
+
+.products-layout .field-note,
+.products-layout .field-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted, #6b7780);
+}
+
+.products-layout .field-hint { line-height: 1.45; }
+
+.products-layout .product-form :is(input[type="text"], textarea) {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--line, #e3e7ea);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--paper, #fff);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: inherit;
+}
+
+.products-layout .product-form textarea {
+  min-height: 110px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.products-layout .product-form :is(input, textarea, select):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green, #1a9d6c) 25%, transparent);
+  outline-offset: 0;
+  border-color: var(--green, #1a9d6c);
+}
+
+.product-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ---------- Photo ---------- */
+.product-photo-block {
+  display: grid;
+  gap: 12px;
+}
+
+.product-image-preview-wrap {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px dashed var(--line, #e3e7ea);
+  border-radius: var(--radius-md, 14px);
+  background: var(--bg, #f6f7f8);
+  color: var(--muted, #6b7780);
+  font-size: 13px;
+}
+
+.product-image-preview-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.products-layout .product-form input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line, #e3e7ea);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--paper, #fff);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted, #6b7780);
+  cursor: pointer;
+}
+
+.products-layout .product-form input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 7px 12px;
+  border: 1px solid var(--line, #e3e7ea);
+  border-radius: 8px;
+  background: var(--bg, #f6f7f8);
+  color: var(--ink-light, #1f2933);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Interrupteur « Produit disponible » ---------- */
+.products-layout .product-active-label:not(.hidden) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line, #e3e7ea);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg, #f6f7f8);
+}
+
+.product-active-label input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  border-radius: 99px;
+  background: #cdd3d8;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.product-active-label input::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.product-active-label input:checked { background: var(--green, #1a9d6c); }
+.product-active-label input:checked::after { transform: translateX(16px); }
+
+.product-active-label input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green, #1a9d6c) 30%, transparent);
+  outline-offset: 2px;
+}
+
+/* ---------- Boutons du formulaire ---------- */
+.product-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.product-form-actions .primary { flex: 1; min-height: 44px; }
+.product-form-actions .ghost-button { min-height: 44px; }
+
+/* ---------- Liste ---------- */
+.products-list-section { min-width: 0; }
+
+.products-list-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 3px 0 14px;
+}
+
+.products-list-heading .muted { font-size: 13px; }
+
+.products-list {
+  display: grid;
+  gap: 12px;
+}
+
+/* État vide (s'affiche quand #products-list ne contient aucun élément) */
+.products-list:empty::before {
+  content: "Aucun produit pour le moment. Remplissez le formulaire pour ajouter votre premier produit.";
+  display: block;
+  padding: 44px 24px;
+  border: 1px dashed var(--line, #e3e7ea);
+  border-radius: var(--radius-md, 14px);
+  color: var(--muted, #6b7780);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---------- Carte produit ---------- */
+.product-card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 14px;
+  border: 1px solid var(--line, #e3e7ea);
+  border-radius: var(--radius-md, 14px);
+  background: var(--paper, #fff);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.product-card:hover {
+  border-color: #c5ccd2;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(15, 23, 42, 0.08));
+}
+
+.product-card.is-inactive .product-card-image { opacity: 0.55; filter: grayscale(1); }
+.product-card.is-inactive .product-card-title-row h3 { color: var(--muted, #6b7780); }
+
+.product-card-image {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-sm, 10px);
+  background: #f0f3f5;
+  color: #78828a;
+  font-size: 26px;
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card-content { min-width: 0; }
+
+.product-card-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.product-card-title-row h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+}
+
+.product-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.product-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.product-status.available { color: #08744f; background: #e7f7ef; }
+.product-status.unavailable { color: #7c4b27; background: #f8eee4; }
+
+.product-card-description {
+  display: -webkit-box;
+  margin: 6px 0 10px;
+  overflow: hidden;
+  color: var(--muted, #6b7780);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.product-card-meta,
+.product-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 12px;
+}
+
+.product-card-meta { color: var(--muted, #6b7780); }
+
+.product-card-meta > span {
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--bg, #f6f7f8);
+}
+
+.product-card-meta strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-light, #1f2933);
+}
+
+.product-card-actions { justify-content: flex-end; }
+
+.product-card-actions button {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--line, #e3e7ea);
+  border-radius: 8px;
+  background: var(--paper, #fff);
+  color: var(--ink-light, #1f2933);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.product-card-actions button:hover {
+  background: var(--bg, #f6f7f8);
+  border-color: #c5ccd2;
+}
+
+.product-card-actions button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green, #1a9d6c) 30%, transparent);
+  outline-offset: 2px;
+}
+
+/* Bouton de suppression, quelle que soit sa classe (danger, delete…) */
+.product-card-actions [class*="danger"]:hover,
+.product-card-actions [class*="delete"]:hover {
+  color: #b42318;
+  border-color: #f0b8b3;
+  background: #fef3f2;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .products-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .products-layout .product-form {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 700px) {
+  .product-card {
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .product-card-image { width: 80px; }
+
+  .product-card-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-form-row { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .product-card-actions button,
+  .product-active-label input,
+  .product-active-label input::after { transition: none; }
+}
