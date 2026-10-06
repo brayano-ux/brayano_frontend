@@ -18,7 +18,6 @@ const envSchema = z.object({
   CAMPAY_CURRENCY: z.string().default("XAF"),
   CAMPAY_DEMO_AMOUNT: z.coerce.number().positive().max(25).default(25),
   CAMPAY_CALLBACK_URL: z.string().url().optional().or(z.literal("")),
-  BILLING_PAGE_URL: z.string().url().optional().or(z.literal("")),
   SUPPORT_EMAIL: z.string().email().optional().or(z.literal("")),
   DEFAULT_ADMIN_EMAIL: z.string().trim().email().optional().or(z.literal("")),
   DEFAULT_ADMIN_PASSWORD: z.string().min(8).optional().or(z.literal("")),

@@ -1,116 +1,144 @@
 <!-- VIEW: OVERVIEW -->
-        <section id="overview-view" class="view">
-          <div class="page-heading">
-            <div>
-              <p id="overview-date" class="eyebrow">DATE</p>
-              <h1>Bonjour <span id="company-greeting">Bienvenue</span> 👋</h1>
-              <p class="muted">Voici ce qui se passe dans votre espace aujourd'hui.</p>
-            </div>
-          </div>
+<section id="overview-view" class="view">
+  <div class="page-heading">
+    <div>
+      <p id="overview-date" class="eyebrow">Aujourd'hui</p>
+      <h1>Bonjour <span id="company-greeting">Bienvenue</span> 👋</h1>
+      <p class="muted">Voici ce qui se passe dans votre espace aujourd'hui.</p>
+    </div>
+  </div>
 
-          <div class="status-banner">
-            <span class="status-icon">✦</span>
-            <div>
-              <strong>Votre agent est prêt à échanger.</strong>
-              <p>Il répond automatiquement aux messages reçus sur WhatsApp.</p>
-            </div>
-            <button class="text-button" data-view-target="agent">Configurer l'agent <span>→</span></button>
-          </div>
+  <div class="status-banner">
+    <span class="status-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4"/><path d="M21 5h-4"/></svg>
+    </span>
+    <div class="status-text">
+      <strong>Votre agent est prêt à échanger.</strong>
+      <p>Il répond automatiquement aux messages reçus sur WhatsApp.</p>
+    </div>
+    <button class="text-button" data-view-target="agent">
+      Configurer l'agent
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </button>
+  </div>
 
-          <div class="metrics">
-            <article class="metric-card">
-              <span class="metric-icon violet">◫</span>
-              <div>
-                <small>CONVERSATIONS ACTIVES</small>
-                <strong id="metric-active">—</strong>
-                <span class="trend positive">↑ En temps réel</span>
-              </div>
-            </article>
-            <article class="metric-card">
-              <span class="metric-icon green">↗</span>
-              <div>
-                <small>MESSAGES TRAITÉS</small>
-                <strong id="metric-messages">—</strong>
-                <span class="trend positive">↑ Aujourd'hui</span>
-              </div>
-            </article>
-            <article class="metric-card">
-              <span class="metric-icon orange">◉</span>
-              <div>
-                <small>STATUT WHATSAPP</small>
-                <strong id="metric-whatsapp">—</strong>
-                <span id="metric-phone" class="trend">Connexion requise</span>
-              </div>
-            </article>
-          </div>
+  <div class="metrics">
+    <article class="metric-card">
+      <span class="metric-icon violet" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </span>
+      <div>
+        <small>Conversations actives</small>
+        <strong id="metric-active">—</strong>
+        <span class="trend live">En temps réel</span>
+      </div>
+    </article>
 
-          <div class="panel commercial-panel" style="margin-bottom: 24px;">
-            <div class="panel-heading">
-              <div>
-                <h2>Messages reçus par commercial</h2>
-                <p class="muted">Suivez le volume reçu par chaque commercial selon la période.</p>
-              </div>
-              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <label class="metric-filter">
-                  <span>Période</span>
-                  <select id="commercial-period">
-                    <option value="today">Aujourd'hui</option>
-                    <option value="7d">7 derniers jours</option>
-                    <option value="30d">30 derniers jours</option>
-                    <option value="all">Tout</option>
-                  </select>
-                </label>
-                <button type="button" class="export-button" id="export-prospects"><span>↓</span> Exporter les prospects</button>
-              </div>
-            </div>
-            <div id="commercial-metrics-list" class="commercial-list"></div>
-          </div>
+    <article class="metric-card">
+      <span class="metric-icon green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>
+      </span>
+      <div>
+        <small>Messages traités</small>
+        <strong id="metric-messages">—</strong>
+        <span class="trend">Aujourd'hui</span>
+      </div>
+    </article>
 
-          <div class="content-grid">
-            <section class="panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Conversations récentes</h2>
-                  <p class="muted">Les derniers échanges avec vos contacts</p>
-                </div>
-                <button class="ghost-button" data-view-target="inbox">Voir tout →</button>
-              </div>
-              <div id="recent-conversations" class="conversation-list">
-                <div class="empty-state">Chargement des conversations...</div>
-              </div>
-            </section>
+    <article class="metric-card">
+      <span class="metric-icon orange" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+      </span>
+      <div>
+        <small>Statut WhatsApp</small>
+        <strong id="metric-whatsapp">—</strong>
+        <span id="metric-phone" class="trend">Connexion requise</span>
+      </div>
+    </article>
+  </div>
 
-            <section class="panel quick-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Actions rapides</h2>
-                  <p class="muted">Gérez votre espace en quelques clics</p>
-                </div>
-              </div>
-              <button class="quick-action" data-view-target="whatsapp">
-                <span class="quick-icon green-bg">◉</span>
-                <div>
-                  <strong>Connecter WhatsApp</strong>
-                  <small>Liez le numéro de votre entreprise</small>
-                </div>
-                <span>→</span>
-              </button>
-              <button class="quick-action" data-view-target="agent">
-                <span class="quick-icon violet-bg">✧</span>
-                <div>
-                  <strong>Personnaliser l'agent</strong>
-                  <small>Adaptez ses réponses à votre activité</small>
-                </div>
-                <span>→</span>
-              </button>
-              <button class="quick-action" data-view-target="inbox">
-                <span class="quick-icon orange-bg">▣</span>
-                <div>
-                  <strong>Ouvrir la boîte de réception</strong>
-                  <small>Répondez aux demandes importantes</small>
-                </div>
-                <span>→</span>
-              </button>
-            </section>
-          </div>
-        </section>
+  <div class="panel commercial-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Messages reçus par commercial</h2>
+        <p class="muted">Suivez le volume reçu par chaque commercial selon la période.</p>
+      </div>
+      <div class="panel-tools">
+        <label class="metric-filter">
+          <span>Période</span>
+          <select id="commercial-period">
+            <option value="today">Aujourd'hui</option>
+            <option value="7d">7 derniers jours</option>
+            <option value="30d">30 derniers jours</option>
+            <option value="all">Tout</option>
+          </select>
+        </label>
+        <button type="button" class="export-button" id="export-prospects">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+          Exporter les prospects
+        </button>
+      </div>
+    </div>
+    <div id="commercial-metrics-list" class="commercial-list"></div>
+  </div>
+
+  <div class="content-grid">
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Conversations récentes</h2>
+          <p class="muted">Les derniers échanges avec vos contacts</p>
+        </div>
+        <button class="ghost-button" data-view-target="inbox">
+          Voir tout
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div id="recent-conversations" class="conversation-list">
+        <div class="empty-state">Chargement des conversations...</div>
+      </div>
+    </section>
+
+    <section class="panel quick-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Actions rapides</h2>
+          <p class="muted">Gérez votre espace en quelques clics</p>
+        </div>
+      </div>
+
+      <button class="quick-action" data-view-target="whatsapp">
+        <span class="quick-icon green-bg" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </span>
+        <div>
+          <strong>Connecter WhatsApp</strong>
+          <small>Liez le numéro de votre entreprise</small>
+        </div>
+        <svg class="quick-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+      <button class="quick-action" data-view-target="agent">
+        <span class="quick-icon violet-bg" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4"/><path d="M21 5h-4"/></svg>
+        </span>
+        <div>
+          <strong>Personnaliser l'agent</strong>
+          <small>Adaptez ses réponses à votre activité</small>
+        </div>
+        <svg class="quick-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+      <button class="quick-action" data-view-target="inbox">
+        <span class="quick-icon orange-bg" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        </span>
+        <div>
+          <strong>Ouvrir la boîte de réception</strong>
+          <small>Répondez aux demandes importantes</small>
+        </div>
+        <svg class="quick-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </section>
+  </div>
+</section>

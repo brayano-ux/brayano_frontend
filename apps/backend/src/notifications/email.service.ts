@@ -15,14 +15,3 @@ export async function sendEmail(input: { to: string; subject: string; text: stri
   await transporter.sendMail({ from: env.SMTP_FROM, ...input });
   return true;
 }
-
-export async function sendTrialUpgradeEmail(to: string) {
-  const frontendOrigin = env.CORS_ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()).find(Boolean);
-  const billingUrl = env.BILLING_PAGE_URL || `${frontendOrigin || env.APP_URL}/billing.html`;
-  return sendEmail({
-    to,
-    subject: "Vos 15 réponses IA gratuites sont utilisées",
-    text: `Vous avez utilisé vos 15 réponses gratuites Brayano AI. Choisissez une formule pour continuer à recevoir des réponses automatiques : ${billingUrl}`,
-    html: `<p>Vous avez utilisé vos 15 réponses gratuites Brayano AI.</p><p>Choisissez une formule pour continuer à recevoir des réponses automatiques.</p><p><a href="${billingUrl}">Voir les formules</a></p>`,
-  });
-}

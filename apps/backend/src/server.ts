@@ -3,7 +3,6 @@ import { env } from "./config/env.js";
 import { aiSettingsRoute } from "./routes/ai-settings.route.js";
 import { aiTestRoute } from "./routes/ai-test.route.js";
 import { authRoute, requireAuth } from "./routes/auth.route.js";
-import { billingRoute } from "./routes/billing.route.js";
 import { conversationsRoute } from "./routes/conversations.route.js";
 import { healthRoute } from "./routes/health.route.js";
 import { organizationsRoute } from "./routes/organizations.route.js";
@@ -122,7 +121,6 @@ async function buildServer() {
 
   await app.register(healthRoute);
   await app.register(authRoute);
-  await app.register(billingRoute);
   await app.register(organizationsRoute);
   await app.register(productsRoute);
   await app.register(aiSettingsRoute);

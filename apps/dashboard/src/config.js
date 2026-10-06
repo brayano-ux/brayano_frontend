@@ -15,7 +15,7 @@ export function getApiBaseUrl() {
   if (window.API_BASE_URL) return window.API_BASE_URL;
 
   const localHosts = ["localhost", "127.0.0.1"];
-  if (localHosts.includes(window.location.hostname)) return "http://127.0.0.1:3001";
+  if (localHosts.includes(window.location.hostname)) return "http://127.0.0.1:3000";
 
   return localStorage.getItem(APP_CONFIG.localStorageKeys.apiBase) || APP_CONFIG.defaultApi;
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createProductImageToken,
+  refreshProductImageUrl,
   resolveProductImageMimeType,
   validateProductImagePayload,
   verifyProductImageToken,
@@ -43,5 +44,23 @@ describe("product image token validation", () => {
     expect(verifyProductImageToken("org-123", "other.png", token)).toBe(false);
     expect(verifyProductImageToken("other-org", "product.png", token)).toBe(false);
     expect(verifyProductImageToken("org-123", "product.png", "tampered-token")).toBe(false);
+  });
+
+  it("adds a fresh signature to stored product image URLs", () => {
+    const organizationId = "org-123";
+    const filename = "123e4567-e89b-12d3-a456-426614174000.jpg";
+    const refreshed = refreshProductImageUrl(
+      organizationId,
+      `http://localhost:3000/media/products/${organizationId}/${filename}`,
+      1000,
+    );
+    const token = new URL(refreshed!).searchParams.get("t");
+
+    expect(verifyProductImageToken(organizationId, filename, token ?? undefined, 1000)).toBe(true);
+  });
+
+  it("does not rewrite image URLs outside the product media endpoint", () => {
+    const imageUrl = "https://cdn.example.com/product.jpg";
+    expect(refreshProductImageUrl("org-123", imageUrl)).toBe(imageUrl);
   });
 });

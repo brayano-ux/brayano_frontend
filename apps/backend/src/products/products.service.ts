@@ -58,20 +58,52 @@ export function verifyProductImageToken(organizationId: string, filename: string
   return expectedToken === token;
 }
 
+export function refreshProductImageUrl(organizationId: string, imageUrl: string | null, issuedAt = Date.now()) {
+  if (!imageUrl) return imageUrl;
+
+  try {
+    const url = new URL(imageUrl);
+    const segments = url.pathname.split("/");
+    const filename = segments.at(-1) ?? "";
+    if (
+      segments.length !== 5 ||
+      segments[1] !== "media" ||
+      segments[2] !== "products" ||
+      segments[3] !== organizationId ||
+      !/^[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(filename)
+    ) {
+      return imageUrl;
+    }
+
+    url.searchParams.set("t", createProductImageToken(organizationId, filename, issuedAt));
+    return url.toString();
+  } catch {
+    return imageUrl;
+  }
+}
+
 export async function listProducts(organizationId: string) {
-  return prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where: { organizationId },
     orderBy: [{ active: "desc" }, { updatedAt: "desc" }],
   });
+  return products.map((product) => ({
+    ...product,
+    imageUrl: refreshProductImageUrl(organizationId, product.imageUrl),
+  }));
 }
 
 export async function listProductsForAssistant(organizationId: string) {
-  return prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where: { organizationId, active: true },
     select: { id: true, name: true, description: true, category: true, price: true, imageUrl: true },
     orderBy: { updatedAt: "desc" },
     take: 30,
   });
+  return products.map((product) => ({
+    ...product,
+    imageUrl: refreshProductImageUrl(organizationId, product.imageUrl),
+  }));
 }
 
 export async function createProduct(

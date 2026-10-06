@@ -1,5 +1,11 @@
-const DEFAULT_API = "https://brayano-ia-5.onrender.com";
-const API = window.API_BASE_URL || localStorage.getItem("brayano_api") || DEFAULT_API;
+const LOCAL_API = "http://127.0.0.1:3000";
+const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const DEFAULT_API = isLocalHost ? LOCAL_API : "https://brayano-ia-5.onrender.com";
+const API = window.API_BASE_URL || (isLocalHost ? LOCAL_API : localStorage.getItem("brayano_api") || DEFAULT_API);
+
+if (isLocalHost) {
+  localStorage.setItem("brayano_api", LOCAL_API);
+}
 let orgId = localStorage.getItem("brayano_org");
 let conversations = [];
 let commercialMetrics = [];

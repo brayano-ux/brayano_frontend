@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
   routingSettingsFindUnique: vi.fn(),
   locationFindFirst: vi.fn(),
   responsibleCreate: vi.fn(),
-  getBillingStatus: vi.fn(),
 }));
 
 vi.mock("../database/client.js", () => ({
@@ -15,11 +14,9 @@ vi.mock("../database/client.js", () => ({
     location: { findFirst: mocks.locationFindFirst },
   },
 }));
-vi.mock("../billing/subscription.service.js", () => ({ getOrganizationBillingStatus: mocks.getBillingStatus }));
-
 import { createResponsible } from "./lead-routing.service.js";
 
-describe("commercial plan limits", () => {
+describe("commercial routing without plan limits", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.locationFindFirst.mockResolvedValue({ id: "location-1" });
@@ -27,33 +24,20 @@ describe("commercial plan limits", () => {
     mocks.routingSettingsFindUnique.mockResolvedValue(null);
   });
 
-  it("blocks a second commercial on Essentiel", async () => {
-    mocks.getBillingStatus.mockResolvedValue({ status: "ACTIVE", responsibleLimit: 1 });
-    mocks.responsibleCount.mockResolvedValue(1);
-
+  it("allows additional commercials without checking a plan limit", async () => {
     await expect(createResponsible("org-1", {
       locationId: "location-1", name: "Commercial 2", whatsappNumber: "+237600000000",
-    })).rejects.toMatchObject({ statusCode: 402, code: "RESPONSIBLE_LIMIT_REACHED" });
-    expect(mocks.responsibleCreate).not.toHaveBeenCalled();
-  });
-
-  it("allows three commercials on Pro and rejects a fourth", async () => {
-    mocks.getBillingStatus.mockResolvedValue({ status: "ACTIVE", responsibleLimit: 3 });
-    mocks.responsibleCount.mockResolvedValueOnce(2).mockResolvedValueOnce(3);
-
-    await expect(createResponsible("org-1", {
-      locationId: "location-1", name: "Commercial 3", whatsappNumber: "+237600000000",
     })).resolves.toEqual({ id: "commercial-1" });
     await expect(createResponsible("org-1", {
-      locationId: "location-1", name: "Commercial 4", whatsappNumber: "+237611111111",
-    })).rejects.toMatchObject({ statusCode: 402, code: "RESPONSIBLE_LIMIT_REACHED" });
+      locationId: "location-1", name: "Commercial 3", whatsappNumber: "+237611111111",
+    })).resolves.toEqual({ id: "commercial-1" });
+    expect(mocks.responsibleCreate).toHaveBeenCalledTimes(2);
+    expect(mocks.responsibleCount).not.toHaveBeenCalled();
   });
 
-  it("allows additional commercials on Business", async () => {
-    mocks.getBillingStatus.mockResolvedValue({ status: "ACTIVE", responsibleLimit: null });
-
+  it("does not impose plan limits on fallback settings", async () => {
     await expect(createResponsible("org-1", {
-      locationId: "location-1", name: "Commercial 11", whatsappNumber: "+237600000000",
+      locationId: "location-1", name: "Commercial sans plafond", whatsappNumber: "+237600000000",
     })).resolves.toEqual({ id: "commercial-1" });
     expect(mocks.responsibleCount).not.toHaveBeenCalled();
   });

@@ -1,87 +1,265 @@
 /* ============================================================
-   VUE : CONNEXION WHATSAPP
+   VUE : CONNEXION WHATSAPP — remplace l'ancien bloc.
+   Scopé sous #whatsapp-view : les autres vues ne changent pas.
+   Ne force jamais « display » sur les éléments qui reçoivent .hidden
+   (bouton #disconnect-wa).
 ============================================================ */
-.whatsapp-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+
+#whatsapp-view :is(button):focus-visible {
+  outline: 3px solid var(--violet-glow);
+  outline-offset: 2px;
 }
 
-.connect-card {
-  text-align: center;
-  padding: 48px 32px;
+#whatsapp-view .whatsapp-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* ---------- Carte de connexion ---------- */
+#whatsapp-view .connect-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 40px 32px 32px;
+  text-align: center;
 }
 
-.connection-illustration {
-  margin: 0 auto 20px;
+/* Icône : grise (déconnecté) -> verte avec coche (connecté) */
+#whatsapp-view .connection-illustration {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
-  background: var(--green-light);
-  color: #0a7d57;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 20px;
+  border: 1.5px solid var(--line);
   border-radius: 50%;
-  font-size: 30px;
+  background: var(--bg);
+  color: var(--muted);
+  transition: var(--transition);
 }
 
-.connect-card h2 {
-  font: 600 21px "Space Grotesk", sans-serif;
+#whatsapp-view .connection-illustration svg { width: 34px; height: 34px; }
+
+#whatsapp-view .connect-card:has(#disconnect-wa:not(.hidden)) .connection-illustration {
+  border-color: transparent;
+  background: var(--green-light);
+  color: #0a7d57;
+}
+
+#whatsapp-view .connect-card:has(#disconnect-wa:not(.hidden)) .connection-illustration::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--paper);
+  border-radius: 50%;
+  background: #0fa672 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center / 14px no-repeat;
+  box-sizing: content-box;
+}
+
+#whatsapp-view .connect-card h2 {
   margin: 0 0 8px;
+  font: 600 21px "Space Grotesk", sans-serif;
   letter-spacing: -0.01em;
 }
 
-.connect-card .primary {
+#whatsapp-view .connect-card > .muted {
+  max-width: 340px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+#whatsapp-view #connect-wa {
+  min-height: 46px;
   margin-top: 24px;
+  padding-inline: 26px;
 }
 
-.connect-card .text-button {
+#whatsapp-view #disconnect-wa {
   margin-top: 16px;
+  padding: 10px 16px;
+  border: 1px solid #f0b8b3;
+  border-radius: 10px;
+  background: transparent;
+  color: #b42318;
+  font: inherit;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-.qr-card {
-  min-height: 400px;
+#whatsapp-view #disconnect-wa:hover { background: #fef3f2; }
+
+/* ---------- Guide en 3 étapes (masqué une fois connecté) ---------- */
+#whatsapp-view .wa-steps {
+  width: 100%;
+  margin: 28px 0 0;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+  counter-reset: wa-step;
+  display: grid;
+  gap: 14px;
+  text-align: left;
+}
+
+#whatsapp-view .wa-steps li {
+  position: relative;
+  min-height: 26px;
+  padding-left: 40px;
+  color: var(--ink-light);
+  font-size: 13px;
+  line-height: 1.55;
+  counter-increment: wa-step;
+}
+
+#whatsapp-view .wa-steps li::before {
+  content: counter(wa-step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--violet-light);
+  color: var(--violet-deep);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#whatsapp-view .wa-steps strong { color: var(--ink); font-weight: 600; }
+
+#whatsapp-view .connect-card:has(#disconnect-wa:not(.hidden)) .wa-steps { display: none; }
+
+/* ---------- Carte du QR code ---------- */
+#whatsapp-view .qr-card {
   display: flex;
   flex-direction: column;
+  min-height: 400px;
 }
 
-.qr-placeholder {
+#whatsapp-view .qr-card .panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#whatsapp-view .qr-card h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+#whatsapp-view .qr-card .panel-heading .muted {
+  margin: 3px 0 0;
+  font-size: 13px;
+}
+
+/* Pastille d'état (le JS change la classe : warning / success…) */
+#whatsapp-view .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: #fdf3e1;
+  color: #9a5b00;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+#whatsapp-view .pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+#whatsapp-view .pill:is(.success, .positive, .connected, .green, .ok) {
+  background: var(--green-light);
+  color: #0a7d57;
+}
+
+#whatsapp-view .pill:is(.danger, .error, .negative) {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+#whatsapp-view .qr-placeholder {
   flex: 1;
-  border: 2px dashed var(--line);
-  border-radius: var(--radius-md);
   display: grid;
   place-content: center;
-  text-align: center;
-  color: var(--muted-light);
+  justify-items: center;
   margin-top: 16px;
   padding: 32px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-md);
   background: var(--bg);
+  color: var(--muted);
+  text-align: center;
 }
 
-.qr-placeholder span {
-  font-size: 46px;
-  color: var(--muted-light);
-  margin-bottom: 8px;
+#whatsapp-view .qr-placeholder span {
   display: block;
+  margin-bottom: 10px;
+  color: var(--muted-light);
+  font-size: 46px;
+  line-height: 1;
 }
 
-.qr-placeholder p {
-  font-size: 13px;
+#whatsapp-view .qr-placeholder span svg { width: 56px; height: 56px; }
+
+#whatsapp-view .qr-placeholder p {
   margin: 0;
+  font-size: 13px;
 }
 
-.qr-placeholder img {
-  width: 230px;
-  height: 230px;
-  border-radius: var(--radius-sm);
+/* Quand le QR code est affiché : cadre blanc (indispensable pour bien scanner) */
+#whatsapp-view .qr-placeholder:has(img) {
+  border-style: solid;
+  background: var(--paper);
 }
 
+#whatsapp-view .qr-placeholder img {
+  box-sizing: border-box;
+  width: 250px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---------- Responsive ---------- */
 @media (max-width: 868px) {
-  .whatsapp-grid {
-    grid-template-columns: 1fr;
+  #whatsapp-view .whatsapp-grid { grid-template-columns: 1fr; }
+  #whatsapp-view .qr-card { min-height: 360px; }
+}
+
+@media (max-width: 480px) {
+  #whatsapp-view .connect-card { padding: 32px 20px 24px; }
+  #whatsapp-view .qr-placeholder { padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #whatsapp-view *, #whatsapp-view *::before, #whatsapp-view *::after {
+    transition: none !important;
   }
 }

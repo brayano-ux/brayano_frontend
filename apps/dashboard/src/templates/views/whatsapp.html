@@ -1,32 +1,50 @@
 <!-- VIEW: WHATSAPP -->
-        <section id="whatsapp-view" class="view hidden">
-          <div class="page-heading">
-            <div>
-              <p class="eyebrow">CANAL DE MESSAGERIE</p>
-              <h1>Connexion WhatsApp</h1>
-              <p class="muted">Connectez le numéro de votre entreprise pour activer l'agent.</p>
-            </div>
-          </div>
-          <div class="whatsapp-grid">
-            <section class="panel connect-card">
-              <div class="connection-illustration">◉</div>
-              <h2 id="wa-title">WhatsApp déconnecté</h2>
-              <p id="wa-description" class="muted">Lancez la connexion puis scannez le QR code depuis WhatsApp &gt; Appareils liés.</p>
-              <button class="primary" id="connect-wa">Connecter le numéro</button>
-              <button class="text-button hidden" id="disconnect-wa">Déconnecter ce numéro</button>
-            </section>
-            <section class="panel qr-card">
-              <div class="panel-heading">
-                <div>
-                  <h2>Code de connexion</h2>
-                  <p class="muted">Le code se rafraîchit automatiquement.</p>
-                </div>
-                <span id="qr-status" class="pill warning">En attente</span>
-              </div>
-              <div id="qr-container" class="qr-placeholder">
-                <span>◫</span>
-                <p>Le QR code apparaîtra ici</p>
-              </div>
-            </section>
-          </div>
-        </section>
+<section id="whatsapp-view" class="view hidden">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">CANAL DE MESSAGERIE</p>
+      <h1>Connexion WhatsApp</h1>
+      <p class="muted">Connectez le numéro de votre entreprise pour activer l'agent.</p>
+    </div>
+  </div>
+
+  <div class="whatsapp-grid">
+    <!-- ============ Colonne gauche : état + actions + guide ============ -->
+    <section class="panel connect-card">
+      <div class="connection-illustration" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 18h.01"/></svg>
+      </div>
+
+      <h2 id="wa-title">WhatsApp déconnecté</h2>
+      <p id="wa-description" class="muted">Lancez la connexion puis scannez le QR code depuis WhatsApp &gt; Appareils liés.</p>
+
+      <button class="primary" id="connect-wa">Connecter le numéro</button>
+      <button class="text-button hidden" id="disconnect-wa">Déconnecter ce numéro</button>
+
+      <!-- Le guide disparaît tout seul quand le numéro est connecté (voir whatsapp.css) -->
+      <ol class="wa-steps" aria-label="Étapes de connexion">
+        <li>Cliquez sur « Connecter le numéro » pour afficher le QR code.</li>
+        <li>Sur votre téléphone, ouvrez WhatsApp puis <strong>Appareils liés</strong>.</li>
+        <li>Ajoutez un appareil et scannez le QR code affiché ici.</li>
+      </ol>
+    </section>
+
+    <!-- ============ Colonne droite : QR code ============ -->
+    <section class="panel qr-card">
+      <div class="panel-heading">
+        <div>
+          <h2>Code de connexion</h2>
+          <p class="muted">Le code se rafraîchit automatiquement.</p>
+        </div>
+        <span id="qr-status" class="pill warning">En attente</span>
+      </div>
+
+      <div id="qr-container" class="qr-placeholder">
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3"/><path d="M21 14v.01"/><path d="M14 21h.01"/><path d="M18 18h3v3h-3z"/></svg>
+        </span>
+        <p>Le QR code apparaîtra ici</p>
+      </div>
+    </section>
+  </div>
+</section>
