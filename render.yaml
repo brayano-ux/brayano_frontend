@@ -60,5 +60,3 @@ services:
         sync: false
       - key: WHATSAPP_AUTH_DIR
         value: /data/wa-session
-      - key: PRODUCT_IMAGE_DIR
-        value: /data/product-images
