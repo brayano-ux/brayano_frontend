@@ -12,6 +12,7 @@ import { routingRoute } from "./lead-routing/lead-routing.route.js";
 import { whatsappRoute } from "./routes/whatsapp.route.js";
 import { AppError } from "./shared/errors.js";
 import { isPublicRoute } from "./shared/public-route.js";
+import { warnIfProductImagesAreEphemeral } from "./shared/storage-check.js";
 import { restoreWhatsAppConnections } from "./whatsapp/whatsapp.registry.js";
 
 async function buildServer() {
@@ -141,6 +142,7 @@ async function buildServer() {
 }
 
 async function start() {
+  warnIfProductImagesAreEphemeral(env.WHATSAPP_AUTH_DIR, env.PRODUCT_IMAGE_DIR);
   const app = await buildServer();
 
   try {
