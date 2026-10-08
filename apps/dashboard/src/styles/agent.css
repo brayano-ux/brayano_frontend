@@ -243,3 +243,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+#platform-suspension-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #8a1c13;
+  font-size: 0.9rem;
+}
