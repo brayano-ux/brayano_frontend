@@ -19,9 +19,18 @@ export interface HumanOutgoingMessage {
   timestamp: Date;
 }
 
+/**
+ * Pourquoi un numéro n'est plus connecté :
+ * - logged_out : déconnecté depuis le téléphone (Appareils liés) ou session invalidée par WhatsApp
+ * - connection_lost : connexion coupée (réseau, serveur), reconnexion automatique en cours
+ * - manual : déconnexion demandée volontairement
+ */
+export type ConnectionLossReason = "logged_out" | "connection_lost" | "manual";
+
 export interface ConnectionUpdatePayload {
   status: WhatsAppConnectionStatus;
   phoneNumber?: string;
+  reason?: ConnectionLossReason;
 }
 
 /**

@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../config/env.js", () => ({ env: mocks.env }));
+vi.mock("../whatsapp/whatsapp.registry.js", () => ({ getWhatsAppAccountStatus: vi.fn((id: string) => (id === "org-1" ? "CONNECTED" : "DISCONNECTED")) }));
 vi.mock("./auth.route.js", () => ({ requireAuth: mocks.requireAuth }));
 vi.mock("../organizations/platform-suspension.service.js", () => ({
   suspendOrganization: mocks.suspend,
@@ -72,11 +73,20 @@ describe("platform admin routes", () => {
     expect(mocks.unsuspend).toHaveBeenCalledWith("org-1");
   });
 
-  it("lists organizations", async () => {
-    mocks.list.mockResolvedValue([{ id: "org-1", platformSuspended: true }]);
+  it("lists organizations with their live WhatsApp status", async () => {
+    const updatedAt = "2026-10-09T08:00:00.000Z";
+    mocks.list.mockResolvedValue([
+      { id: "org-1", platformSuspended: true, whatsappAccounts: [{ status: "CONNECTED", phoneNumber: "237600000000", updatedAt }] },
+      { id: "org-2", platformSuspended: false, whatsappAccounts: [] },
+    ]);
     const app = await buildApp();
     const response = await app.inject({ method: "GET", url: "/admin/organizations", headers: auth });
-    expect(JSON.parse(response.payload)).toEqual({ organizations: [{ id: "org-1", platformSuspended: true }] });
+    expect(JSON.parse(response.payload)).toEqual({
+      organizations: [
+        { id: "org-1", platformSuspended: true, whatsapp: { status: "CONNECTED", phoneNumber: "237600000000", updatedAt } },
+        { id: "org-2", platformSuspended: false, whatsapp: { status: "DISCONNECTED", phoneNumber: null, updatedAt: null } },
+      ],
+    });
   });
 
   it("accepts the session of a listed admin email, case-insensitively", async () => {

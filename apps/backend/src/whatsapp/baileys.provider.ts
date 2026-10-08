@@ -12,6 +12,7 @@ import pino from "pino";
 import QRCode from "qrcode";
 import { BotSentIds, extractHumanOutgoing } from "./outgoing-detection.js";
 import type {
+  ConnectionLossReason,
   ConnectionUpdatePayload,
   HumanOutgoingMessage,
   IncomingWhatsAppMessage,
@@ -83,7 +84,7 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
         this.qrDataUrl = null;
         this.pairingCode = null;
         this.pairingCodeRequested = false;
-        this.setStatus("DISCONNECTED");
+        this.setStatus("DISCONNECTED", undefined, shouldReconnect ? "connection_lost" : "logged_out");
 
         if (shouldReconnect) {
           await this.connect();
@@ -210,7 +211,7 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
   async disconnect(): Promise<void> {
     await this.socket?.logout();
     this.socket = null;
-    this.setStatus("DISCONNECTED");
+    this.setStatus("DISCONNECTED", undefined, "manual");
   }
 
   getStatus(): WhatsAppConnectionStatus {
@@ -294,15 +295,13 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
     this.connectionHandlers.push(handler);
   }
 
-  private setStatus(status: WhatsAppConnectionStatus, phoneNumber?: string): void {
+  private setStatus(status: WhatsAppConnectionStatus, phoneNumber?: string, reason?: ConnectionLossReason): void {
     this.status = status;
+    const update: ConnectionUpdatePayload = { status };
+    if (phoneNumber !== undefined) update.phoneNumber = phoneNumber;
+    if (reason !== undefined) update.reason = reason;
     for (const handler of this.connectionHandlers) {
-      if (phoneNumber !== undefined) {
-        handler({ status, phoneNumber });
-        continue;
-      }
-
-      handler({ status });
+      handler(update);
     }
   }
 }

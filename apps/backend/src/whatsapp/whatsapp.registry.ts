@@ -24,7 +24,9 @@ import {
   resolveRequestedProductImage,
 } from "../products/product-image-selection.js";
 import { listProductsForAssistant } from "../products/products.service.js";
+import { sendWhatsAppDisconnectAlert, sendWhatsAppRecoveredNotice } from "../notifications/whatsapp-alerts.js";
 import { BaileysWhatsAppProvider } from "./baileys.provider.js";
+import { createConnectionMonitor } from "./connection-monitor.js";
 import type {
   IncomingWhatsAppMessage,
   WhatsAppConnectionStatus,
@@ -51,6 +53,22 @@ async function getOrCreateAccount(organizationId: string) {
   });
 }
 
+/** Prévient le propriétaire quand un numéro reste déconnecté (voir connection-monitor.ts). */
+const connectionMonitor = createConnectionMonitor({
+  graceMs: env.WHATSAPP_ALERT_DELAY_MINUTES * 60_000,
+  onAlert: (outage) => sendWhatsAppDisconnectAlert(outage).then(() => undefined),
+  onRecovered: (outage, downMs) => sendWhatsAppRecoveredNotice(outage, downMs).then(() => undefined),
+});
+
+/** Traite les changements d'état d'une entreprise dans l'ordre où ils arrivent, même s'ils attendent la base. */
+const statusQueues = new Map<string, Promise<void>>();
+function enqueueStatusUpdate(organizationId: string, work: () => Promise<void>) {
+  const previous = statusQueues.get(organizationId) ?? Promise.resolve();
+  const next = previous.then(work, work);
+  statusQueues.set(organizationId, next);
+  return next;
+}
+
 function getOrCreateProvider(organizationId: string): WhatsAppProvider {
   const existing = providers.get(organizationId);
   if (existing) return existing;
@@ -63,9 +81,12 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
   const instance = new BaileysWhatsAppProvider(authDir);
   providers.set(organizationId, instance);
 
-  instance.onConnectionUpdate(async ({ status, phoneNumber }) => {
+  instance.onConnectionUpdate(({ status, phoneNumber, reason }) => enqueueStatusUpdate(organizationId, async () => {
+    let previouslyConnected = false;
     try {
       const account = await getOrCreateAccount(organizationId);
+      // Un numéro déjà enregistré s'est connecté au moins une fois : sa déconnexion mérite une alerte.
+      previouslyConnected = Boolean(account.phoneNumber);
       await prisma.whatsAppAccount.update({
         where: { id: account.id },
         data: { status, ...(phoneNumber ? { phoneNumber } : {}) },
@@ -73,7 +94,8 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
     } catch (error) {
       console.error(`[org:${organizationId}] Échec de sauvegarde du statut WhatsApp :`, error);
     }
-  });
+    connectionMonitor.handle(organizationId, { status, ...(reason ? { reason } : {}), previouslyConnected });
+  }));
 
   // Le gérant écrit lui-même au prospect depuis son téléphone : l'IA se tait pendant 24 h.
   instance.onHumanMessage?.(async (message) => {
@@ -338,6 +360,7 @@ export async function connectWhatsAppAccountWithPairingCode(
 }
 
 export async function disconnectWhatsAppAccount(organizationId: string): Promise<void> {
+  connectionMonitor.markIntentional(organizationId);
   connectionAttempts.delete(organizationId);
   const provider = providers.get(organizationId);
 
