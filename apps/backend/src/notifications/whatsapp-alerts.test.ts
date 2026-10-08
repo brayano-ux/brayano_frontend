@@ -66,6 +66,16 @@ describe("WhatsApp disconnection alert", () => {
     }
   });
 
+  it("adds the WhatsApp technical explanation to the owner email", () => {
+    const text = buildDisconnectAlert(
+      { id: "o", name: "X", createdAt: SINCE, phoneNumber: null, platformSuspended: false, lastMessageAt: null, admins: [] },
+      { ...outage, reason: "connection_lost", detail: "Session ouverte ailleurs : un autre serveur utilise le même numéro (code 440)" },
+      SINCE.getTime() + 600_000,
+    ).text;
+    expect(text).toContain("Détail WhatsApp : Session ouverte ailleurs");
+    expect(text).toContain("(code 440)");
+  });
+
   it("explains a lost connection differently from a logout", () => {
     const text = buildDisconnectAlert(
       { id: "o", name: "X", createdAt: SINCE, phoneNumber: null, platformSuspended: true, lastMessageAt: null, admins: [] },

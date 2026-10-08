@@ -26,7 +26,7 @@ function createSocket() {
 }
 
 describe("raison des déconnexions transmise au moniteur", () => {
-  const updates: Array<{ status: string; reason?: string; phoneNumber?: string }> = [];
+  const updates: Array<{ status: string; reason?: string; phoneNumber?: string; detail?: string }> = [];
   let provider: BaileysWhatsAppProvider;
 
   beforeEach(async () => {
@@ -51,6 +51,13 @@ describe("raison des déconnexions transmise au moniteur", () => {
   it("reports any other closure as a lost connection that will retry", async () => {
     await close(515);
     expect(updates.find((u) => u.status === "DISCONNECTED")).toMatchObject({ status: "DISCONNECTED", reason: "connection_lost" });
+  });
+
+  it("explains the closure with the WhatsApp code", async () => {
+    await close(440);
+    expect(updates.find((u) => u.status === "DISCONNECTED")).toMatchObject({ reason: "connection_lost", detail: expect.stringContaining("(code 440)") });
+    await close(401);
+    expect(updates.filter((u) => u.status === "DISCONNECTED").at(-1)).toMatchObject({ reason: "logged_out", detail: expect.stringContaining("(code 401)") });
   });
 
   it("reports a voluntary disconnect as manual", async () => {

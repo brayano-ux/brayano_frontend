@@ -63,6 +63,9 @@ export async function adminRoute(app: FastifyInstance) {
           status: getWhatsAppAccountStatus(organization.id),
           phoneNumber: whatsappAccounts[0]?.phoneNumber ?? null,
           updatedAt: whatsappAccounts[0]?.updatedAt ?? null,
+          lastConnectedAt: whatsappAccounts[0]?.lastConnectedAt ?? null,
+          lastDisconnectedAt: whatsappAccounts[0]?.lastDisconnectedAt ?? null,
+          lastDisconnectReason: whatsappAccounts[0]?.lastDisconnectReason ?? null,
         },
       })),
     };

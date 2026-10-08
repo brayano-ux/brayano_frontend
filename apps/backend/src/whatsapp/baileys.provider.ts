@@ -10,6 +10,7 @@ import makeWASocket, {
 } from "@whiskeysockets/baileys";
 import pino from "pino";
 import QRCode from "qrcode";
+import { describeCloseCode } from "./disconnect-reasons.js";
 import { BotSentIds, extractHumanOutgoing } from "./outgoing-detection.js";
 import type {
   ConnectionLossReason,
@@ -84,7 +85,7 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
         this.qrDataUrl = null;
         this.pairingCode = null;
         this.pairingCodeRequested = false;
-        this.setStatus("DISCONNECTED", undefined, shouldReconnect ? "connection_lost" : "logged_out");
+        this.setStatus("DISCONNECTED", undefined, shouldReconnect ? "connection_lost" : "logged_out", describeCloseCode(statusCode));
 
         if (shouldReconnect) {
           await this.connect();
@@ -295,11 +296,12 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
     this.connectionHandlers.push(handler);
   }
 
-  private setStatus(status: WhatsAppConnectionStatus, phoneNumber?: string, reason?: ConnectionLossReason): void {
+  private setStatus(status: WhatsAppConnectionStatus, phoneNumber?: string, reason?: ConnectionLossReason, detail?: string): void {
     this.status = status;
     const update: ConnectionUpdatePayload = { status };
     if (phoneNumber !== undefined) update.phoneNumber = phoneNumber;
     if (reason !== undefined) update.reason = reason;
+    if (detail !== undefined) update.detail = detail;
     for (const handler of this.connectionHandlers) {
       handler(update);
     }

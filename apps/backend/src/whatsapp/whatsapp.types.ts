@@ -31,6 +31,8 @@ export interface ConnectionUpdatePayload {
   status: WhatsAppConnectionStatus;
   phoneNumber?: string;
   reason?: ConnectionLossReason;
+  /** Explication lisible de la fermeture, avec le code WhatsApp (ex. « Session ouverte ailleurs (code 440) »). */
+  detail?: string;
 }
 
 /**

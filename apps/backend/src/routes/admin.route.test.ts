@@ -73,18 +73,23 @@ describe("platform admin routes", () => {
     expect(mocks.unsuspend).toHaveBeenCalledWith("org-1");
   });
 
-  it("lists organizations with their live WhatsApp status", async () => {
+  it("lists organizations with their live WhatsApp status and disconnection history", async () => {
     const updatedAt = "2026-10-09T08:00:00.000Z";
+    const history = { lastConnectedAt: updatedAt, lastDisconnectedAt: "2026-10-09T07:00:00.000Z", lastDisconnectReason: "Session ouverte ailleurs (code 440)" };
     mocks.list.mockResolvedValue([
-      { id: "org-1", platformSuspended: true, whatsappAccounts: [{ status: "CONNECTED", phoneNumber: "237600000000", updatedAt }] },
+      { id: "org-1", platformSuspended: true, whatsappAccounts: [{ status: "CONNECTED", phoneNumber: "237600000000", updatedAt, ...history }] },
       { id: "org-2", platformSuspended: false, whatsappAccounts: [] },
     ]);
     const app = await buildApp();
     const response = await app.inject({ method: "GET", url: "/admin/organizations", headers: auth });
     expect(JSON.parse(response.payload)).toEqual({
       organizations: [
-        { id: "org-1", platformSuspended: true, whatsapp: { status: "CONNECTED", phoneNumber: "237600000000", updatedAt } },
-        { id: "org-2", platformSuspended: false, whatsapp: { status: "DISCONNECTED", phoneNumber: null, updatedAt: null } },
+        { id: "org-1", platformSuspended: true, whatsapp: { status: "CONNECTED", phoneNumber: "237600000000", updatedAt, ...history } },
+        {
+          id: "org-2",
+          platformSuspended: false,
+          whatsapp: { status: "DISCONNECTED", phoneNumber: null, updatedAt: null, lastConnectedAt: null, lastDisconnectedAt: null, lastDisconnectReason: null },
+        },
       ],
     });
   });
