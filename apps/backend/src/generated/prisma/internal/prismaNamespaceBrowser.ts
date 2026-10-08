@@ -94,10 +94,7 @@ export const OrganizationScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   freeAiResponsesRemaining: 'freeAiResponsesRemaining',
-  trialUpgradeEmailSentAt: 'trialUpgradeEmailSentAt',
-  platformSuspended: 'platformSuspended',
-  suspensionReason: 'suspensionReason',
-  suspendedAt: 'suspendedAt'
+  trialUpgradeEmailSentAt: 'trialUpgradeEmailSentAt'
 } as const
 
 export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]

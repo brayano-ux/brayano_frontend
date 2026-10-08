@@ -31,19 +31,9 @@ function renderAgentImagePreview(url) {
   preview.classList.remove("hidden");
 }
 
-function renderPlatformSuspension(suspension) {
-  const notice = $("#platform-suspension-notice");
-  const suspended = Boolean(suspension?.suspended);
-  notice.classList.toggle("hidden", !suspended);
-  notice.textContent = suspended
-    ? `Votre agent IA est suspendu par l'administrateur de la plateforme.${suspension.reason ? ` Motif : ${suspension.reason}.` : ""} Contactez le support pour le réactiver.`
-    : "";
-}
-
 export async function loadSettings() {
   try {
-    const { settings, platformSuspension } = await api(`/organizations/${getState().organizationId}/ai-settings`);
-    renderPlatformSuspension(platformSuspension);
+    const { settings } = await api(`/organizations/${getState().organizationId}/ai-settings`);
     const qualificationFields = settings.qualificationFields || [];
 
     $("#global-ai-enabled").checked = settings.aiEnabled !== false;

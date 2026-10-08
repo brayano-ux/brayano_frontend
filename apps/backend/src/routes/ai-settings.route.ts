@@ -4,7 +4,6 @@ import {
   getOrCreateAiSettings,
   updateAiSettings,
 } from "../ai/ai-settings.service.js";
-import { getPlatformSuspension } from "../organizations/platform-suspension.service.js";
 import { ValidationError } from "../shared/errors.js";
 
 const validMediaUrl = z
@@ -30,8 +29,7 @@ export async function aiSettingsRoute(app: FastifyInstance) {
   app.get("/organizations/:orgId/ai-settings", async (request) => {
     const { orgId } = request.params as { orgId: string };
     const settings = await getOrCreateAiSettings(orgId);
-    const suspension = await getPlatformSuspension(orgId);
-    return { settings, platformSuspension: suspension };
+    return { settings };
   });
 
   app.put("/organizations/:orgId/ai-settings", async (request) => {

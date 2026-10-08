@@ -15,7 +15,6 @@ import {
 } from "../conversations/conversations.service.js";
 import { withConversationSendLock } from "../conversations/conversation-send-lock.js";
 import { prisma } from "../database/client.js";
-import { getPlatformSuspension } from "../organizations/platform-suspension.service.js";
 import { registerQualifiedLead } from "../lead-routing/lead-routing.service.js";
 import {
   buildProductDetailsMessage,
@@ -127,11 +126,6 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
       const settings = await getOrCreateAiSettings(organizationId);
       if (!settings.aiEnabled) {
         console.log(`⏸️  [org:${organizationId}] IA désactivée globalement depuis le dashboard.`);
-        return;
-      }
-      const suspension = await getPlatformSuspension(organizationId);
-      if (suspension.suspended) {
-        console.log(`⛔ [org:${organizationId}] IA suspendue par l'administrateur de la plateforme.`);
         return;
       }
       const products = await listProductsForAssistant(organizationId);
