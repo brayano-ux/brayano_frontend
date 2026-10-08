@@ -32,6 +32,7 @@ import {
 } from "../notifications/whatsapp-alerts.js";
 import { BaileysWhatsAppProvider } from "./baileys.provider.js";
 import { createConnectionMonitor } from "./connection-monitor.js";
+import { buildAccountHistoryUpdate } from "./disconnect-reasons.js";
 import type {
   IncomingWhatsAppMessage,
   WhatsAppConnectionStatus,
@@ -89,20 +90,25 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
   const instance = new BaileysWhatsAppProvider(authDir);
   providers.set(organizationId, instance);
 
-  instance.onConnectionUpdate(({ status, phoneNumber, reason }) => enqueueStatusUpdate(organizationId, async () => {
+  instance.onConnectionUpdate(({ status, phoneNumber, reason, detail }) => enqueueStatusUpdate(organizationId, async () => {
     let previouslyConnected = false;
+    console.log(`📶 [org:${organizationId}] WhatsApp ${status}${detail ? ` : ${detail}` : reason ? ` (${reason})` : ""}`);
     try {
       const account = await getOrCreateAccount(organizationId);
       // Un numéro déjà enregistré s'est connecté au moins une fois : sa déconnexion mérite une alerte.
       previouslyConnected = Boolean(account.phoneNumber);
       await prisma.whatsAppAccount.update({
         where: { id: account.id },
-        data: { status, ...(phoneNumber ? { phoneNumber } : {}) },
+        data: {
+          status,
+          ...(phoneNumber ? { phoneNumber } : {}),
+          ...buildAccountHistoryUpdate({ status, ...(reason ? { reason } : {}), ...(detail ? { detail } : {}) }, new Date()),
+        },
       });
     } catch (error) {
       console.error(`[org:${organizationId}] Échec de sauvegarde du statut WhatsApp :`, error);
     }
-    connectionMonitor.handle(organizationId, { status, ...(reason ? { reason } : {}), previouslyConnected });
+    connectionMonitor.handle(organizationId, { status, ...(reason ? { reason } : {}), ...(detail ? { detail } : {}), previouslyConnected });
   }));
 
   // Le gérant écrit lui-même au prospect depuis son téléphone : l'IA se tait pendant 24 h.

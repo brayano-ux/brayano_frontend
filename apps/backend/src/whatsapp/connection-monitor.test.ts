@@ -65,6 +65,14 @@ describe("connection monitor", () => {
     expect(onRecovered).not.toHaveBeenCalled();
   });
 
+  it("passes the WhatsApp explanation along with the outage and keeps it through later updates", () => {
+    const monitor = make();
+    monitor.handle("org-1", { status: "DISCONNECTED", reason: "connection_lost", detail: "Session ouverte ailleurs (code 440)", previouslyConnected: true });
+    monitor.handle("org-1", { status: "QR_PENDING", previouslyConnected: true });
+    advance(6 * MIN);
+    expect(onAlert).toHaveBeenCalledWith(expect.objectContaining({ detail: "Session ouverte ailleurs (code 440)", status: "QR_PENDING" }));
+  });
+
   it("alerts sooner when the number was logged out from the phone", () => {
     const monitor = make();
     monitor.handle("org-1", { status: "DISCONNECTED", reason: "logged_out", previouslyConnected: true });

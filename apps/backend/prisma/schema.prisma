@@ -210,6 +210,9 @@ model WhatsAppAccount {
   organizationId String                @map("organization_id")
   phoneNumber    String?               @map("phone_number")
   status         WhatsAppAccountStatus @default(DISCONNECTED)
+  lastConnectedAt      DateTime?       @map("last_connected_at")
+  lastDisconnectedAt   DateTime?       @map("last_disconnected_at")
+  lastDisconnectReason String?         @map("last_disconnect_reason")
   createdAt      DateTime              @default(now()) @map("created_at")
   updatedAt      DateTime              @updatedAt @map("updated_at")
 

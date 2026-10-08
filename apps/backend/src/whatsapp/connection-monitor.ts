@@ -4,6 +4,8 @@ export interface ConnectionOutage {
   organizationId: string;
   status: WhatsAppConnectionStatus;
   reason: ConnectionLossReason;
+  /** Explication lisible de la dernière fermeture (code WhatsApp compris). */
+  detail?: string;
   since: Date;
 }
 
@@ -94,7 +96,7 @@ export function createConnectionMonitor(options: MonitorOptions) {
       cancelClientTimer(state);
     },
 
-    handle(organizationId: string, update: { status: WhatsAppConnectionStatus; reason?: ConnectionLossReason; previouslyConnected: boolean }) {
+    handle(organizationId: string, update: { status: WhatsAppConnectionStatus; reason?: ConnectionLossReason; detail?: string; previouslyConnected: boolean }) {
       const state = stateOf(organizationId);
 
       if (update.status === "CONNECTED") {
@@ -128,7 +130,14 @@ export function createConnectionMonitor(options: MonitorOptions) {
 
       const reason: ConnectionLossReason = update.reason ?? state.outage?.reason ?? "connection_lost";
       const since = state.outage?.since ?? new Date(now());
-      state.outage = { organizationId, status: update.status, reason: reason === "logged_out" ? "logged_out" : state.outage?.reason ?? reason, since };
+      const detail = update.detail ?? state.outage?.detail;
+      state.outage = {
+        organizationId,
+        status: update.status,
+        reason: reason === "logged_out" ? "logged_out" : state.outage?.reason ?? reason,
+        ...(detail ? { detail } : {}),
+        since,
+      };
       if (options.onClientAlert && !state.clientAlerted && state.clientTimer === null) {
         const clientGrace = options.clientGraceMs ?? options.graceMs;
         state.clientTimer = setTimer(() => fireClient(organizationId, state), Math.max(0, since.getTime() + clientGrace - now()));

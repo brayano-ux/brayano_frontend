@@ -67,6 +67,7 @@ export function buildDisconnectAlert(details: OrganizationDetails, outage: Conne
       "Pendant ce temps, l'IA ne reçoit ni ne répond à aucun message de ses prospects.",
       "",
       `Cause probable : ${REASON_TEXT[outage.reason]}`,
+      ...(outage.detail ? [`Détail WhatsApp : ${outage.detail}`] : []),
       "",
       describeOrganization(details),
       "",
