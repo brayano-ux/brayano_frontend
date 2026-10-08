@@ -2,6 +2,7 @@ import { api } from "../../services/api.js";
 import { $, $$, escapeHtml, showToast } from "../../utils/dom.js";
 import { getState, setState } from "../../state/store.js";
 import { APP_CONFIG } from "../../config.js";
+import { applyPlatformSuspension } from "../suspension/suspension.js";
 
 /**
  * Feature "Agent IA" : configuration de la base de connaissances
@@ -31,22 +32,13 @@ function renderAgentImagePreview(url) {
   preview.classList.remove("hidden");
 }
 
-function renderPlatformSuspension(suspension) {
-  const notice = $("#platform-suspension-notice");
-  const suspended = Boolean(suspension?.suspended);
-  notice.classList.toggle("hidden", !suspended);
-  notice.textContent = suspended
-    ? `Votre agent IA est suspendu par l'administrateur de la plateforme.${suspension.reason ? ` Motif : ${suspension.reason}.` : ""} Contactez le support pour le réactiver.`
-    : "";
-}
-
 export async function loadSettings() {
   try {
     const { settings, platformSuspension } = await api(`/organizations/${getState().organizationId}/ai-settings`);
-    renderPlatformSuspension(platformSuspension);
     const qualificationFields = settings.qualificationFields || [];
 
     $("#global-ai-enabled").checked = settings.aiEnabled !== false;
+    applyPlatformSuspension(platformSuspension);
     $("#agent-name").value = settings.agentName || "";
     $("#business-info").value = settings.businessInfo || "";
     $("#agent-image-url").value = settings.agentImageUrl || "";

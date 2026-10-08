@@ -217,3 +217,18 @@
 
 .toast[data-type="success"] { border-left-color: var(--green); }
 .toast[data-type="error"] { border-left-color: var(--red); }
+
+.platform-banner {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fdecea;
+  color: #8a1c13;
+  border: 1px solid #f3b8b2;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.platform-banner.hidden {
+  display: none;
+}
