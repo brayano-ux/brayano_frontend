@@ -72,6 +72,7 @@ export async function listOrganizationsForAdmin() {
       suspensionReason: true,
       suspendedAt: true,
       aiSettings: { select: { aiEnabled: true } },
+      whatsappAccounts: { select: { status: true, phoneNumber: true, updatedAt: true }, orderBy: { updatedAt: "desc" }, take: 1 },
     },
   });
 }

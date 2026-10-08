@@ -7,7 +7,9 @@ import {
   suspendOrganization,
   unsuspendOrganization,
 } from "../organizations/platform-suspension.service.js";
+import { getPlatformAdminEmails } from "../organizations/platform-admins.js";
 import { ValidationError } from "../shared/errors.js";
+import { getWhatsAppAccountStatus } from "../whatsapp/whatsapp.registry.js";
 import { requireAuth } from "./auth.route.js";
 
 const suspendSchema = z.object({ reason: z.string().trim().max(300).optional() });
@@ -16,19 +18,14 @@ function sha256(value: string) {
   return createHash("sha256").update(value).digest();
 }
 
+export { getPlatformAdminEmails };
+
 export function isValidPlatformAdminToken(authorization: string | undefined) {
   const expected = env.PLATFORM_ADMIN_TOKEN;
   if (!expected) return false;
   const provided = /^Bearer (.+)$/.exec(authorization ?? "")?.[1];
   if (!provided) return false;
   return timingSafeEqual(sha256(provided), sha256(expected));
-}
-
-/** Emails autorisés : PLATFORM_ADMIN_EMAILS, sinon le compte DEFAULT_ADMIN_EMAIL du déploiement. */
-export function getPlatformAdminEmails() {
-  const configured = (env.PLATFORM_ADMIN_EMAILS ?? "").split(",");
-  const emails = configured.some((value) => value.trim()) ? configured : [env.DEFAULT_ADMIN_EMAIL ?? ""];
-  return emails.map((value) => value.trim().toLowerCase()).filter(Boolean);
 }
 
 /**
@@ -56,7 +53,20 @@ export async function adminRoute(app: FastifyInstance) {
     }
   });
 
-  app.get("/admin/organizations", async () => ({ organizations: await listOrganizationsForAdmin() }));
+  app.get("/admin/organizations", async () => {
+    const organizations = await listOrganizationsForAdmin();
+    return {
+      organizations: organizations.map(({ whatsappAccounts, ...organization }) => ({
+        ...organization,
+        // État en direct du serveur (la base peut dater d'avant un redémarrage).
+        whatsapp: {
+          status: getWhatsAppAccountStatus(organization.id),
+          phoneNumber: whatsappAccounts[0]?.phoneNumber ?? null,
+          updatedAt: whatsappAccounts[0]?.updatedAt ?? null,
+        },
+      })),
+    };
+  });
 
   app.post("/admin/organizations/:orgId/suspend", async (request) => {
     const { orgId } = request.params as { orgId: string };
