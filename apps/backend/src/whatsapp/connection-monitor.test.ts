@@ -8,6 +8,8 @@ describe("connection monitor", () => {
   const timers: Array<{ at: number; callback: () => void; cancelled: boolean }> = [];
   const onAlert = vi.fn();
   const onRecovered = vi.fn();
+  const onClientAlert = vi.fn();
+  const onClientRecovered = vi.fn();
 
   const advance = (ms: number) => {
     clock += ms;
@@ -30,6 +32,9 @@ describe("connection monitor", () => {
     clearTimer: (timer) => { (timer as { cancelled: boolean }).cancelled = true; },
     onAlert,
     onRecovered,
+    clientGraceMs: 5 * MIN,
+    onClientAlert,
+    onClientRecovered,
   });
 
   beforeEach(() => {
@@ -150,5 +155,76 @@ describe("connection monitor", () => {
     advance(2 * MIN);
     await Promise.resolve();
     expect(onAlert).toHaveBeenCalledTimes(1);
+  });
+
+  describe("prévenir le client lui-même", () => {
+    it("emails the client after 5 minutes, even when the owner was alerted earlier", () => {
+      const monitor = make();
+      monitor.handle("org-1", { status: "DISCONNECTED", reason: "logged_out", previouslyConnected: true });
+      advance(2 * MIN);
+      expect(onAlert).toHaveBeenCalledTimes(1);
+      expect(onClientAlert).not.toHaveBeenCalled();
+      advance(4 * MIN);
+      expect(onClientAlert).toHaveBeenCalledTimes(1);
+      expect(onClientAlert).toHaveBeenCalledWith(expect.objectContaining({ organizationId: "org-1" }));
+    });
+
+    it("emails the client only once per outage, counted from the start of the outage", () => {
+      const monitor = make();
+      monitor.handle("org-1", { status: "DISCONNECTED", reason: "connection_lost", previouslyConnected: true });
+      advance(3 * MIN);
+      monitor.handle("org-1", { status: "QR_PENDING", previouslyConnected: true });
+      advance(3 * MIN);
+      expect(onClientAlert).toHaveBeenCalledTimes(1);
+      advance(60 * MIN);
+      expect(onClientAlert).toHaveBeenCalledTimes(1);
+    });
+
+    it("stays silent when the number reconnects before 5 minutes", () => {
+      const monitor = make();
+      monitor.handle("org-1", { status: "DISCONNECTED", reason: "connection_lost", previouslyConnected: true });
+      advance(3 * MIN);
+      monitor.handle("org-1", { status: "CONNECTED", previouslyConnected: true });
+      advance(10 * MIN);
+      expect(onClientAlert).not.toHaveBeenCalled();
+      expect(onClientRecovered).not.toHaveBeenCalled();
+    });
+
+    it("never emails the client for a voluntary disconnection or a first connection", () => {
+      const monitor = make();
+      monitor.markIntentional("org-1");
+      monitor.handle("org-1", { status: "DISCONNECTED", reason: "logged_out", previouslyConnected: true });
+      monitor.handle("org-2", { status: "QR_PENDING", previouslyConnected: false });
+      advance(60 * MIN);
+      expect(onClientAlert).not.toHaveBeenCalled();
+    });
+
+    it("cancels a pending client email when the disconnection becomes voluntary", () => {
+      const monitor = make();
+      monitor.handle("org-1", { status: "DISCONNECTED", reason: "connection_lost", previouslyConnected: true });
+      advance(MIN);
+      monitor.markIntentional("org-1");
+      advance(60 * MIN);
+      expect(onClientAlert).not.toHaveBeenCalled();
+    });
+
+    it("tells the client when the number is back, only if they had been warned", () => {
+      const monitor = make();
+      monitor.handle("org-1", { status: "DISCONNECTED", reason: "connection_lost", previouslyConnected: true });
+      advance(8 * MIN);
+      monitor.handle("org-1", { status: "CONNECTED", previouslyConnected: true });
+      expect(onClientRecovered).toHaveBeenCalledTimes(1);
+      expect(onClientRecovered).toHaveBeenCalledWith(expect.objectContaining({ organizationId: "org-1" }), 8 * MIN);
+    });
+
+    it("warns the client again for a later outage", () => {
+      const monitor = make();
+      for (let i = 0; i < 2; i += 1) {
+        monitor.handle("org-1", { status: "DISCONNECTED", reason: "connection_lost", previouslyConnected: true });
+        advance(6 * MIN);
+        monitor.handle("org-1", { status: "CONNECTED", previouslyConnected: true });
+      }
+      expect(onClientAlert).toHaveBeenCalledTimes(2);
+    });
   });
 });

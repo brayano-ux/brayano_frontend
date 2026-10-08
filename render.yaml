@@ -42,6 +42,8 @@ services:
         sync: false
       - key: PLATFORM_ADMIN_TOKEN
         sync: false
+      - key: CLIENT_DASHBOARD_URL
+        sync: false
       - key: SUPPORT_EMAIL
         sync: false
       - key: GEMINI_API_KEY
