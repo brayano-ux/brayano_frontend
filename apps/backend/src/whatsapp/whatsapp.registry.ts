@@ -24,7 +24,12 @@ import {
   resolveRequestedProductImage,
 } from "../products/product-image-selection.js";
 import { listProductsForAssistant } from "../products/products.service.js";
-import { sendWhatsAppDisconnectAlert, sendWhatsAppRecoveredNotice } from "../notifications/whatsapp-alerts.js";
+import {
+  sendClientDisconnectEmail,
+  sendClientRecoveredEmail,
+  sendWhatsAppDisconnectAlert,
+  sendWhatsAppRecoveredNotice,
+} from "../notifications/whatsapp-alerts.js";
 import { BaileysWhatsAppProvider } from "./baileys.provider.js";
 import { createConnectionMonitor } from "./connection-monitor.js";
 import type {
@@ -58,6 +63,9 @@ const connectionMonitor = createConnectionMonitor({
   graceMs: env.WHATSAPP_ALERT_DELAY_MINUTES * 60_000,
   onAlert: (outage) => sendWhatsAppDisconnectAlert(outage).then(() => undefined),
   onRecovered: (outage, downMs) => sendWhatsAppRecoveredNotice(outage, downMs).then(() => undefined),
+  clientGraceMs: env.WHATSAPP_CLIENT_ALERT_DELAY_MINUTES * 60_000,
+  onClientAlert: (outage) => sendClientDisconnectEmail(outage).then(() => undefined),
+  onClientRecovered: (outage) => sendClientRecoveredEmail(outage).then(() => undefined),
 });
 
 /** Traite les changements d'état d'une entreprise dans l'ordre où ils arrivent, même s'ils attendent la base. */

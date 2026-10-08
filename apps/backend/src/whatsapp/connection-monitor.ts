@@ -17,6 +17,10 @@ interface MonitorOptions {
   clearTimer?: (timer: unknown) => void;
   onAlert: (outage: ConnectionOutage) => void | Promise<void>;
   onRecovered: (outage: ConnectionOutage, downMs: number) => void | Promise<void>;
+  /** Prévient le client lui-même (étape indépendante de celle du propriétaire). */
+  clientGraceMs?: number;
+  onClientAlert?: (outage: ConnectionOutage) => void | Promise<void>;
+  onClientRecovered?: (outage: ConnectionOutage, downMs: number) => void | Promise<void>;
 }
 
 interface OrganizationState {
@@ -24,6 +28,8 @@ interface OrganizationState {
   outage: ConnectionOutage | null;
   timer: unknown;
   alerted: boolean;
+  clientTimer: unknown;
+  clientAlerted: boolean;
 }
 
 /**
@@ -44,7 +50,7 @@ export function createConnectionMonitor(options: MonitorOptions) {
   function stateOf(organizationId: string): OrganizationState {
     let state = states.get(organizationId);
     if (!state) {
-      state = { intentional: false, outage: null, timer: null, alerted: false };
+      state = { intentional: false, outage: null, timer: null, alerted: false, clientTimer: null, clientAlerted: false };
       states.set(organizationId, state);
     }
     return state;
@@ -53,6 +59,20 @@ export function createConnectionMonitor(options: MonitorOptions) {
   function cancelTimer(state: OrganizationState) {
     if (state.timer !== null) clearTimer(state.timer);
     state.timer = null;
+  }
+
+  function cancelClientTimer(state: OrganizationState) {
+    if (state.clientTimer !== null) clearTimer(state.clientTimer);
+    state.clientTimer = null;
+  }
+
+  function fireClient(organizationId: string, state: OrganizationState) {
+    state.clientTimer = null;
+    if (!state.outage || state.clientAlerted || state.intentional || !options.onClientAlert) return;
+    state.clientAlerted = true;
+    Promise.resolve(options.onClientAlert(state.outage)).catch((error) => {
+      console.error(`[org:${organizationId}] Email de déconnexion WhatsApp au client impossible :`, error);
+    });
   }
 
   function fire(organizationId: string, state: OrganizationState) {
@@ -71,6 +91,7 @@ export function createConnectionMonitor(options: MonitorOptions) {
       state.intentional = true;
       state.outage = null;
       cancelTimer(state);
+      cancelClientTimer(state);
     },
 
     handle(organizationId: string, update: { status: WhatsAppConnectionStatus; reason?: ConnectionLossReason; previouslyConnected: boolean }) {
@@ -78,15 +99,26 @@ export function createConnectionMonitor(options: MonitorOptions) {
 
       if (update.status === "CONNECTED") {
         cancelTimer(state);
+        cancelClientTimer(state);
         const outage = state.outage;
         const wasAlerted = state.alerted;
+        const clientWasAlerted = state.clientAlerted;
         state.intentional = false;
         state.outage = null;
         state.alerted = false;
-        if (wasAlerted && outage) {
-          Promise.resolve(options.onRecovered(outage, now() - outage.since.getTime())).catch((error) => {
-            console.error(`[org:${organizationId}] Notification de reconnexion WhatsApp impossible :`, error);
-          });
+        state.clientAlerted = false;
+        if (outage) {
+          const downMs = now() - outage.since.getTime();
+          if (wasAlerted) {
+            Promise.resolve(options.onRecovered(outage, downMs)).catch((error) => {
+              console.error(`[org:${organizationId}] Notification de reconnexion WhatsApp impossible :`, error);
+            });
+          }
+          if (clientWasAlerted && options.onClientRecovered) {
+            Promise.resolve(options.onClientRecovered(outage, downMs)).catch((error) => {
+              console.error(`[org:${organizationId}] Email de reconnexion WhatsApp au client impossible :`, error);
+            });
+          }
         }
         return;
       }
@@ -97,6 +129,10 @@ export function createConnectionMonitor(options: MonitorOptions) {
       const reason: ConnectionLossReason = update.reason ?? state.outage?.reason ?? "connection_lost";
       const since = state.outage?.since ?? new Date(now());
       state.outage = { organizationId, status: update.status, reason: reason === "logged_out" ? "logged_out" : state.outage?.reason ?? reason, since };
+      if (options.onClientAlert && !state.clientAlerted && state.clientTimer === null) {
+        const clientGrace = options.clientGraceMs ?? options.graceMs;
+        state.clientTimer = setTimer(() => fireClient(organizationId, state), Math.max(0, since.getTime() + clientGrace - now()));
+      }
       if (state.alerted) return;
 
       const grace = state.outage.reason === "logged_out"
