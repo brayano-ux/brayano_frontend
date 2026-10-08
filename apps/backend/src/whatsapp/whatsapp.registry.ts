@@ -6,6 +6,7 @@ import { buildSystemPrompt } from "../ai/prompt.js";
 import { env } from "../config/env.js";
 import {
   getRecentHistoryForAi,
+  recordHumanReplyFromPhone,
   recordInboundMessage,
   recordOutboundMessage,
   isConversationUpdateStillCurrent,
@@ -71,6 +72,24 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
       });
     } catch (error) {
       console.error(`[org:${organizationId}] Échec de sauvegarde du statut WhatsApp :`, error);
+    }
+  });
+
+  // Le gérant écrit lui-même au prospect depuis son téléphone : l'IA se tait pendant 24 h.
+  instance.onHumanMessage?.(async (message) => {
+    try {
+      const result = await recordHumanReplyFromPhone({
+        organizationId,
+        toJid: message.toJid,
+        externalId: message.externalId,
+        text: message.text,
+        timestamp: message.timestamp,
+      });
+      if (result.aiPaused) {
+        console.log(`🙋 [org:${organizationId}] Un humain répond depuis le téléphone : IA en pause 24 h pour ce prospect.`);
+      }
+    } catch (error) {
+      console.error(`❌ [org:${organizationId}] Réponse humaine depuis le téléphone non enregistrée :`, error);
     }
   });
 
