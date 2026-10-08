@@ -7,6 +7,7 @@ import { initInbox, renderInbox, openConversation, bindInboxRefresh } from "./fe
 import { initAgent, loadSettings } from "./features/agent/agent.js";
 import { initDelaySettings, loadDelaySettings } from "./features/settings/delay-settings.js";
 import { initRoutingSettings, loadRoutingConfig } from "./features/settings/routing-settings.js";
+import { loadPlatformSuspension } from "./features/suspension/suspension.js";
 import { initWhatsapp, loadWhatsApp } from "./features/whatsapp/whatsapp.js";
 import { initProducts, loadProducts } from "./features/products/products.js";
 import { isNetworkError } from "./services/api.js";
@@ -19,7 +20,7 @@ import { showToast } from "./utils/dom.js";
  */
 
 async function refreshAll() {
-  await refreshOverview(openConversation);
+  await Promise.all([refreshOverview(openConversation), loadPlatformSuspension()]);
 }
 
 const viewLoaders = {
