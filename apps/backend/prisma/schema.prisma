@@ -28,6 +28,9 @@ model Organization {
   billingSubscription BillingSubscription?
   freeAiResponsesRemaining Int @default(0) @map("free_ai_responses_remaining")
   trialUpgradeEmailSentAt DateTime? @map("trial_upgrade_email_sent_at")
+  platformSuspended       Boolean   @default(false) @map("platform_suspended")
+  suspensionReason        String?   @map("suspension_reason")
+  suspendedAt             DateTime? @map("suspended_at")
 
   @@map("organizations")
 }
