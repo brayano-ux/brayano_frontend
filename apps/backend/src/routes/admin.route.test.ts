@@ -5,10 +5,16 @@ const mocks = vi.hoisted(() => ({
   suspend: vi.fn(),
   unsuspend: vi.fn(),
   list: vi.fn(),
-  env: { PLATFORM_ADMIN_TOKEN: "t".repeat(40) as string | undefined },
+  requireAuth: vi.fn(),
+  env: {
+    PLATFORM_ADMIN_TOKEN: "t".repeat(40) as string | undefined,
+    PLATFORM_ADMIN_EMAILS: "" as string | undefined,
+    DEFAULT_ADMIN_EMAIL: "" as string | undefined,
+  },
 }));
 
 vi.mock("../config/env.js", () => ({ env: mocks.env }));
+vi.mock("./auth.route.js", () => ({ requireAuth: mocks.requireAuth }));
 vi.mock("../organizations/platform-suspension.service.js", () => ({
   suspendOrganization: mocks.suspend,
   unsuspendOrganization: mocks.unsuspend,
@@ -29,6 +35,9 @@ describe("platform admin routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.env.PLATFORM_ADMIN_TOKEN = "t".repeat(40);
+    mocks.env.PLATFORM_ADMIN_EMAILS = "";
+    mocks.env.DEFAULT_ADMIN_EMAIL = "";
+    mocks.requireAuth.mockResolvedValue(null);
   });
 
   it("rejects requests without the platform token", async () => {
@@ -40,7 +49,7 @@ describe("platform admin routes", () => {
     expect(mocks.suspend).not.toHaveBeenCalled();
   });
 
-  it("is disabled when no token is configured", async () => {
+  it("is disabled when neither a token nor an admin email is configured", async () => {
     mocks.env.PLATFORM_ADMIN_TOKEN = undefined;
     const app = await buildApp();
     const response = await app.inject({ method: "GET", url: "/admin/organizations", headers: auth });
@@ -65,5 +74,43 @@ describe("platform admin routes", () => {
     const app = await buildApp();
     const response = await app.inject({ method: "GET", url: "/admin/organizations", headers: auth });
     expect(JSON.parse(response.payload)).toEqual({ organizations: [{ id: "org-1", platformSuspended: true }] });
+  });
+
+  it("accepts the session of a listed admin email, case-insensitively", async () => {
+    mocks.env.PLATFORM_ADMIN_TOKEN = undefined;
+    mocks.env.PLATFORM_ADMIN_EMAILS = " Owner@Example.com , other@example.com";
+    mocks.requireAuth.mockResolvedValue({ email: "owner@example.com", organizationId: "org-1" });
+    mocks.list.mockResolvedValue([]);
+    const app = await buildApp();
+    const response = await app.inject({ method: "GET", url: "/admin/organizations", headers: { authorization: "Bearer session-token" } });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("falls back to DEFAULT_ADMIN_EMAIL when PLATFORM_ADMIN_EMAILS is empty", async () => {
+    mocks.env.PLATFORM_ADMIN_TOKEN = undefined;
+    mocks.env.DEFAULT_ADMIN_EMAIL = "admin@example.com";
+    mocks.requireAuth.mockResolvedValue({ email: "admin@example.com", organizationId: "org-1" });
+    mocks.list.mockResolvedValue([]);
+    const app = await buildApp();
+    const response = await app.inject({ method: "GET", url: "/admin/organizations", headers: { authorization: "Bearer session-token" } });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("rejects a valid session of a non-admin company account with 403", async () => {
+    mocks.env.PLATFORM_ADMIN_TOKEN = undefined;
+    mocks.env.PLATFORM_ADMIN_EMAILS = "owner@example.com";
+    mocks.requireAuth.mockResolvedValue({ email: "client@example.com", organizationId: "org-2" });
+    const app = await buildApp();
+    const response = await app.inject({ method: "POST", url: "/admin/organizations/org-1/suspend", headers: { authorization: "Bearer session-token" } });
+    expect(response.statusCode).toBe(403);
+    expect(mocks.suspend).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown session with 401", async () => {
+    mocks.env.PLATFORM_ADMIN_TOKEN = undefined;
+    mocks.env.PLATFORM_ADMIN_EMAILS = "owner@example.com";
+    const app = await buildApp();
+    const response = await app.inject({ method: "GET", url: "/admin/organizations", headers: { authorization: "Bearer nope" } });
+    expect(response.statusCode).toBe(401);
   });
 });
