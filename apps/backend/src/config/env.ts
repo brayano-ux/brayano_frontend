@@ -18,6 +18,7 @@ const envSchema = z.object({
   CAMPAY_CURRENCY: z.string().default("XAF"),
   CAMPAY_DEMO_AMOUNT: z.coerce.number().positive().max(25).default(25),
   CAMPAY_CALLBACK_URL: z.string().url().optional().or(z.literal("")),
+  PLATFORM_ADMIN_EMAILS: z.string().optional().or(z.literal("")),
   PLATFORM_ADMIN_TOKEN: z.string().min(32, "PLATFORM_ADMIN_TOKEN doit faire au moins 32 caractères").optional().or(z.literal("")),
   SUPPORT_EMAIL: z.string().email().optional().or(z.literal("")),
   DEFAULT_ADMIN_EMAIL: z.string().trim().email().optional().or(z.literal("")),
