@@ -5,15 +5,21 @@ export type PlatformSuspension = { suspended: boolean; reason: string | null; su
 
 /** Suspension décidée par le propriétaire de la plateforme, indépendante du réglage `aiEnabled` du client. */
 export async function getPlatformSuspension(organizationId: string): Promise<PlatformSuspension> {
-  const organization = await prisma.organization.findUnique({
-    where: { id: organizationId },
-    select: { platformSuspended: true, suspensionReason: true, suspendedAt: true },
-  });
-  return {
-    suspended: organization?.platformSuspended ?? false,
-    reason: organization?.suspensionReason ?? null,
-    suspendedAt: organization?.suspendedAt ?? null,
-  };
+  try {
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { platformSuspended: true, suspensionReason: true, suspendedAt: true },
+    });
+    return {
+      suspended: organization?.platformSuspended ?? false,
+      reason: organization?.suspensionReason ?? null,
+      suspendedAt: organization?.suspendedAt ?? null,
+    };
+  } catch (error) {
+    // Un problème de base ne doit jamais couper l'IA de toutes les entreprises : on laisse répondre.
+    console.error(`[org:${organizationId}] Lecture de la suspension plateforme impossible, IA autorisée par défaut :`, error);
+    return { suspended: false, reason: null, suspendedAt: null };
+  }
 }
 
 async function setSuspension(organizationId: string, data: { platformSuspended: boolean; suspensionReason: string | null; suspendedAt: Date | null }) {
