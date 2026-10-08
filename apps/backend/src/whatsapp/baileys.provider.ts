@@ -4,13 +4,16 @@ import makeWASocket, {
   DisconnectReason,
   downloadMediaMessage,
   fetchLatestBaileysVersion,
+  generateMessageID,
   useMultiFileAuthState,
   type WASocket,
 } from "@whiskeysockets/baileys";
 import pino from "pino";
 import QRCode from "qrcode";
+import { BotSentIds, extractHumanOutgoing } from "./outgoing-detection.js";
 import type {
   ConnectionUpdatePayload,
+  HumanOutgoingMessage,
   IncomingWhatsAppMessage,
   WhatsAppConnectionStatus,
   WhatsAppProvider,
@@ -29,6 +32,9 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
   private pairingReadyReject: ((error: Error) => void) | null = null;
 
   private messageHandlers: Array<(message: IncomingWhatsAppMessage) => void> = [];
+  private humanMessageHandlers: Array<(message: HumanOutgoingMessage) => void> = [];
+  /** Identifiants des messages envoyés par l'application : tout autre message sortant vient d'un humain. */
+  private readonly botSentIds = new BotSentIds();
   private connectionHandlers: Array<(update: ConnectionUpdatePayload) => void> = [];
 
   constructor(private readonly authDir: string) {}
@@ -93,7 +99,14 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
 
     this.socket.ev.on("messages.upsert", async ({ messages }) => {
       for (const msg of messages) {
-        if (msg.key.fromMe || !msg.message) continue;
+        if (msg.key.fromMe) {
+          const human = extractHumanOutgoing(msg, this.botSentIds);
+          if (human) {
+            for (const handler of this.humanMessageHandlers) handler(human);
+          }
+          continue;
+        }
+        if (!msg.message) continue;
 
         const remoteJid = msg.key.remoteJidAlt ?? msg.key.remoteJid;
         // On ignore les statuts WhatsApp (stories) et les groupes : le MVP
@@ -245,7 +258,9 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
     if (!this.socket) {
       throw new Error("Le socket WhatsApp n'est pas connecté.");
     }
-    await this.socket.sendMessage(jid, { text });
+    const messageId = generateMessageID();
+    this.botSentIds.add(messageId);
+    await this.socket.sendMessage(jid, { text }, { messageId });
   }
 
   async sendImage(jid: string, imageUrl: string, caption?: string): Promise<void> {
@@ -262,11 +277,17 @@ export class BaileysWhatsAppProvider implements WhatsAppProvider {
       payload.caption = normalizedCaption;
     }
 
-    await this.socket.sendMessage(jid, payload as any);
+    const messageId = generateMessageID();
+    this.botSentIds.add(messageId);
+    await this.socket.sendMessage(jid, payload as any, { messageId });
   }
 
   onMessage(handler: (message: IncomingWhatsAppMessage) => void): void {
     this.messageHandlers.push(handler);
+  }
+
+  onHumanMessage(handler: (message: HumanOutgoingMessage) => void): void {
+    this.humanMessageHandlers.push(handler);
   }
 
   onConnectionUpdate(handler: (update: ConnectionUpdatePayload) => void): void {

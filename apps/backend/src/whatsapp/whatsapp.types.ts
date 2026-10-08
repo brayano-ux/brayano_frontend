@@ -11,6 +11,14 @@ export interface IncomingWhatsAppMessage {
   };
 }
 
+/** Message envoyé par un humain depuis le téléphone du numéro connecté (pas par l'application). */
+export interface HumanOutgoingMessage {
+  externalId: string;
+  toJid: string;
+  text: string | null;
+  timestamp: Date;
+}
+
 export interface ConnectionUpdatePayload {
   status: WhatsAppConnectionStatus;
   phoneNumber?: string;
@@ -33,5 +41,7 @@ export interface WhatsAppProvider {
   sendMessage(jid: string, text: string): Promise<void>;
   sendImage(jid: string, imageUrl: string, caption?: string): Promise<void>;
   onMessage(handler: (message: IncomingWhatsAppMessage) => void): void;
+  /** Un humain écrit à un prospect depuis le téléphone : l'IA doit se mettre en pause. */
+  onHumanMessage?(handler: (message: HumanOutgoingMessage) => void): void;
   onConnectionUpdate(handler: (update: ConnectionUpdatePayload) => void): void;
 }
