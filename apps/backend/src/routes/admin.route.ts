@@ -62,13 +62,13 @@ export async function adminRoute(app: FastifyInstance) {
     const { orgId } = request.params as { orgId: string };
     const parsed = suspendSchema.safeParse(request.body ?? {});
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0]?.message);
-    await suspendOrganization(orgId, parsed.data.reason || null);
-    return { organizationId: orgId, platformSuspended: true };
+    const { notification } = await suspendOrganization(orgId, parsed.data.reason || null);
+    return { organizationId: orgId, platformSuspended: true, notification };
   });
 
   app.post("/admin/organizations/:orgId/unsuspend", async (request) => {
     const { orgId } = request.params as { orgId: string };
-    await unsuspendOrganization(orgId);
-    return { organizationId: orgId, platformSuspended: false };
+    const { notification } = await unsuspendOrganization(orgId);
+    return { organizationId: orgId, platformSuspended: false, notification };
   });
 }

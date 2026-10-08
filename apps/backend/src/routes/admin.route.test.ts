@@ -38,6 +38,8 @@ describe("platform admin routes", () => {
     mocks.env.PLATFORM_ADMIN_EMAILS = "";
     mocks.env.DEFAULT_ADMIN_EMAIL = "";
     mocks.requireAuth.mockResolvedValue(null);
+    mocks.suspend.mockResolvedValue({ notification: { status: "sent", sent: 2, total: 2 } });
+    mocks.unsuspend.mockResolvedValue({ notification: null });
   });
 
   it("rejects requests without the platform token", async () => {
@@ -62,6 +64,7 @@ describe("platform admin routes", () => {
       method: "POST", url: "/admin/organizations/org-1/suspend", headers: auth, payload: { reason: "Impayé" },
     });
     expect(suspended.statusCode).toBe(200);
+    expect(JSON.parse(suspended.payload)).toMatchObject({ platformSuspended: true, notification: { status: "sent", sent: 2, total: 2 } });
     expect(mocks.suspend).toHaveBeenCalledWith("org-1", "Impayé");
 
     const restored = await app.inject({ method: "POST", url: "/admin/organizations/org-1/unsuspend", headers: auth });

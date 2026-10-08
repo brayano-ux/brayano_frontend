@@ -32,46 +32,65 @@ describe("getPlatformSuspension", () => {
 });
 
 describe("suspension changes and notifications", () => {
+  const sent = { status: "sent", sent: 2, total: 2 };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     mocks.updateMany.mockResolvedValue({ count: 1 });
-    mocks.sendEmail.mockResolvedValue(1);
+    mocks.sendEmail.mockResolvedValue(sent);
   });
 
-  it("emails the administrators when an organization becomes suspended", async () => {
+  it("emails the administrators when an organization becomes suspended and reports the result", async () => {
     mocks.findUnique.mockResolvedValue({ platformSuspended: false });
-    await suspendOrganization("org-1", "Impayé");
+    const result = await suspendOrganization("org-1", "Impayé");
     expect(mocks.updateMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "org-1" },
       data: expect.objectContaining({ platformSuspended: true, suspensionReason: "Impayé" }),
     }));
     expect(mocks.sendEmail).toHaveBeenCalledWith("org-1", "suspended", "Impayé");
+    expect(result).toEqual({ notification: sent });
   });
 
   it("does not email again when the organization is already suspended", async () => {
     mocks.findUnique.mockResolvedValue({ platformSuspended: true });
-    await suspendOrganization("org-1", "Nouveau motif");
+    const result = await suspendOrganization("org-1", "Nouveau motif");
     expect(mocks.updateMany).toHaveBeenCalled();
     expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({ notification: null });
   });
 
   it("emails the administrators when the suspension is lifted", async () => {
     mocks.findUnique.mockResolvedValue({ platformSuspended: true });
-    await unsuspendOrganization("org-1");
+    const result = await unsuspendOrganization("org-1");
     expect(mocks.sendEmail).toHaveBeenCalledWith("org-1", "reactivated", null);
+    expect(result).toEqual({ notification: sent });
   });
 
   it("does not email when lifting a suspension that did not exist", async () => {
     mocks.findUnique.mockResolvedValue({ platformSuspended: false });
-    await unsuspendOrganization("org-1");
+    await expect(unsuspendOrganization("org-1")).resolves.toEqual({ notification: null });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
-  it("still succeeds when the email cannot be sent", async () => {
+  it("still succeeds and reports a failure when the email cannot be sent", async () => {
     mocks.findUnique.mockResolvedValue({ platformSuspended: false });
     mocks.sendEmail.mockRejectedValue(new Error("SMTP down"));
-    await expect(suspendOrganization("org-1", null)).resolves.toBeUndefined();
+    await expect(suspendOrganization("org-1", null)).resolves.toEqual({ notification: { status: "failed", sent: 0, total: 0 } });
+    expect(mocks.updateMany).toHaveBeenCalled();
+  });
+
+  it("does not wait forever for a slow mail server", async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.findUnique.mockResolvedValue({ platformSuspended: false });
+      mocks.sendEmail.mockReturnValue(new Promise(() => undefined));
+      const pending = suspendOrganization("org-1", null);
+      await vi.advanceTimersByTimeAsync(8001);
+      await expect(pending).resolves.toEqual({ notification: { status: "pending", sent: 0, total: 0 } });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("rejects an unknown organization", async () => {
