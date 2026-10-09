@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { orderRequestSchema } from "../orders/order-logic.js";
 import { bookingRequestSchema } from "../appointments/booking.js";
 
 /**
@@ -19,6 +20,7 @@ export const aiReplySchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
   imageUrl: z.string().url().optional().or(z.literal("")),
   booking: bookingRequestSchema,
+  order: orderRequestSchema,
 });
 
 export type AIReply = z.infer<typeof aiReplySchema>;

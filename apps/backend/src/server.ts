@@ -8,6 +8,7 @@ import { authRoute, requireAuth } from "./routes/auth.route.js";
 import { conversationsRoute } from "./routes/conversations.route.js";
 import { healthRoute } from "./routes/health.route.js";
 import { organizationsRoute } from "./routes/organizations.route.js";
+import { ordersRoute } from "./orders/orders.route.js";
 import { productsRoute } from "./products/products.route.js";
 import { routingRoute } from "./lead-routing/lead-routing.route.js";
 import { whatsappRoute } from "./routes/whatsapp.route.js";
@@ -128,6 +129,7 @@ async function buildServer() {
   await app.register(organizationsRoute);
   await app.register(productsRoute);
   await app.register(appointmentsRoute);
+  await app.register(ordersRoute);
   await app.register(aiSettingsRoute);
   await app.register(aiTestRoute);
   await app.register(routingRoute);

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../database/client.js";
+import { buildAppointmentEmail, notifyOrganizationAdmins } from "../notifications/owner-notifications.js";
 import { NotFoundError, ValidationError } from "../shared/errors.js";
 import {
   computeFreeSlots,
@@ -13,6 +14,7 @@ import {
 import {
   decideBooking,
   describeBookingOutcome,
+  formatSlotLabel,
   type BookingRequest,
   type ExistingAppointment,
 } from "./booking.js";
@@ -310,6 +312,21 @@ export async function applyAiBooking(
       }
       return result;
     });
+    const kind = decision.kind === "book" ? "booked" : decision.kind === "reschedule" ? "rescheduled" : decision.kind === "cancel" ? "cancelled" : null;
+    if (kind) {
+      const whenLabel = decision.kind === "book" || decision.kind === "reschedule"
+        ? formatSlotLabel(decision.startsAt, agenda.config.timezone)
+        : null;
+      void notifyOrganizationAdmins(context.organizationId, (organizationName) =>
+        buildAppointmentEmail({
+          organizationName,
+          kind,
+          prospect: { name: context.contactName, phone: context.contactPhone },
+          whenLabel,
+          service: ("service" in decision ? decision.service : undefined) || agenda.serviceLabel,
+        }),
+      );
+    }
     return describeBookingOutcome(decision, agenda.config.timezone);
   } catch (error) {
     console.error(`❌ [agenda:${context.organizationId}] Échec de la réservation IA :`, error);

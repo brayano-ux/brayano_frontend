@@ -137,3 +137,13 @@ export const AppointmentSource = {
 } as const
 
 export type AppointmentSource = (typeof AppointmentSource)[keyof typeof AppointmentSource]
+
+
+export const OrderStatus = {
+  NEW: 'NEW',
+  CONFIRMED: 'CONFIRMED',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
