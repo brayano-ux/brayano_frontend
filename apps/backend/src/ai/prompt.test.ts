@@ -78,3 +78,17 @@ describe("language handling in the assistant prompt", () => {
     expect(prompt).toContain("leadData");
   });
 });
+
+describe("orders section in the assistant prompt", () => {
+  it("leaves the prompt untouched when orders are disabled", () => {
+    const without = buildSystemPrompt({ ...baseSettings, products: [] });
+    expect(without).not.toContain("PRISE DE COMMANDE");
+    expect(buildSystemPrompt({ ...baseSettings, products: [], orders: null })).toBe(without);
+  });
+
+  it("adds the order rules and the order field when enabled", () => {
+    const prompt = buildSystemPrompt({ ...baseSettings, products: [], orders: "PRISE DE COMMANDE (ACTIVÉE)" });
+    expect(prompt).toContain("PRISE DE COMMANDE (ACTIVÉE)");
+    expect(prompt).toContain("- order :");
+  });
+});

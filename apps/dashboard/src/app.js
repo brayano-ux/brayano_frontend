@@ -11,6 +11,7 @@ import { loadPlatformSuspension } from "./features/suspension/suspension.js";
 import { initWhatsapp, loadWhatsApp } from "./features/whatsapp/whatsapp.js";
 import { initProducts, loadProducts } from "./features/products/products.js";
 import { initAppointments, loadAppointments } from "./features/appointments/appointments.js";
+import { initOrders, loadOrders } from "./features/orders/orders.js";
 import { isNetworkError } from "./services/api.js";
 import { showToast } from "./utils/dom.js";
 
@@ -30,6 +31,7 @@ const viewLoaders = {
   agent: loadSettings,
   products: loadProducts,
   appointments: loadAppointments,
+  orders: loadOrders,
   settings: () => {
     loadDelaySettings();
     loadRoutingConfig();
@@ -70,6 +72,7 @@ function bootstrap() {
   initAgent();
   initProducts();
   initAppointments();
+  initOrders();
   initDelaySettings();
   initRoutingSettings();
   initWhatsapp();

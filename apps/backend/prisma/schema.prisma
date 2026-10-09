@@ -26,6 +26,8 @@ model Organization {
   products          Product[]
   appointmentSettings AppointmentSettings?
   appointments      Appointment[]
+  orderSettings     OrderSettings?
+  orders            Order[]
   billingPayments   BillingPayment[]
   billingSubscription BillingSubscription?
   freeAiResponsesRemaining Int @default(0) @map("free_ai_responses_remaining")
@@ -494,4 +496,46 @@ model Appointment {
   @@index([organizationId, startsAt])
   @@index([organizationId, contactJid, status])
   @@map("appointments")
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+model OrderSettings {
+  id             String   @id @default(uuid())
+  organizationId String   @unique @map("organization_id")
+  enabled        Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("order_settings")
+}
+
+model Order {
+  id              String            @id @default(uuid())
+  organizationId  String            @map("organization_id")
+  conversationId  String?           @map("conversation_id")
+  contactJid      String?           @map("contact_jid")
+  customerName    String            @map("customer_name")
+  customerPhone   String?           @map("customer_phone")
+  deliveryAddress String            @map("delivery_address")
+  notes           String?
+  items           Json
+  total           Int?
+  status          OrderStatus       @default(NEW)
+  source          AppointmentSource @default(AI)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, contactJid])
+  @@map("orders")
 }

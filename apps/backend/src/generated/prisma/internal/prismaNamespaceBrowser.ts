@@ -71,7 +71,9 @@ export const ModelName = {
   OrganizationRoutingSettings: 'OrganizationRoutingSettings',
   ProspectLead: 'ProspectLead',
   AppointmentSettings: 'AppointmentSettings',
-  Appointment: 'Appointment'
+  Appointment: 'Appointment',
+  OrderSettings: 'OrderSettings',
+  Order: 'Order'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -421,6 +423,37 @@ export const AppointmentScalarFieldEnum = {
 } as const
 
 export type AppointmentScalarFieldEnum = (typeof AppointmentScalarFieldEnum)[keyof typeof AppointmentScalarFieldEnum]
+
+
+export const OrderSettingsScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderSettingsScalarFieldEnum = (typeof OrderSettingsScalarFieldEnum)[keyof typeof OrderSettingsScalarFieldEnum]
+
+
+export const OrderScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  conversationId: 'conversationId',
+  contactJid: 'contactJid',
+  customerName: 'customerName',
+  customerPhone: 'customerPhone',
+  deliveryAddress: 'deliveryAddress',
+  notes: 'notes',
+  items: 'items',
+  total: 'total',
+  status: 'status',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
 
 
 export const SortOrder = {

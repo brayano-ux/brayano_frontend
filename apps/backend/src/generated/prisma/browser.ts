@@ -122,3 +122,13 @@ export type AppointmentSettings = Prisma.AppointmentSettingsModel
  * 
  */
 export type Appointment = Prisma.AppointmentModel
+/**
+ * Model OrderSettings
+ * 
+ */
+export type OrderSettings = Prisma.OrderSettingsModel
+/**
+ * Model Order
+ * 
+ */
+export type Order = Prisma.OrderModel

@@ -15,6 +15,7 @@ import {
   updateConversationQualification,
 } from "../conversations/conversations.service.js";
 import { applyAiBooking, loadAgendaPrompt } from "../appointments/appointments.service.js";
+import { applyAiOrder, loadOrderPrompt } from "../orders/orders.service.js";
 import { withConversationSendLock } from "../conversations/conversation-send-lock.js";
 import { prisma } from "../database/client.js";
 import { getPlatformSuspension } from "../organizations/platform-suspension.service.js";
@@ -196,11 +197,16 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
         console.error(`❌ [agenda:${organizationId}] Chargement de l'agenda ignoré :`, error);
         return null;
       });
+      const orderSection = await loadOrderPrompt(organizationId).catch((error) => {
+        console.error(`❌ [orders:${organizationId}] Chargement des commandes ignoré :`, error);
+        return null;
+      });
       const systemPrompt = buildSystemPrompt({
         ...settings,
         knownLeadData: previousLeadData,
         products,
         agenda: agenda?.section ?? null,
+        orders: orderSection,
       });
       const history = await getRecentHistoryForAi(conversation.id);
       const aiReply = await getAiOrchestrator().getReply(conversation.id, systemPrompt, history);
@@ -308,6 +314,23 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
             textToSend = outcome.replaceReply;
           } else if (outcome?.appendToReply) {
             textToSend = `${outboundText}\n\n${outcome.appendToReply}`;
+          }
+        }
+
+        if (orderSection && aiReply.order) {
+          const leadName = typeof mergedLeadData.name === "string" ? mergedLeadData.name : null;
+          const phone = message.fromJid.endsWith("@s.whatsapp.net") ? message.fromJid.split("@")[0] ?? null : null;
+          const outcome = await applyAiOrder(aiReply.order, {
+            organizationId,
+            conversationId: conversation.id,
+            contactJid: message.fromJid,
+            contactName: leadName,
+            contactPhone: phone,
+          });
+          if (outcome?.replaceReply) {
+            textToSend = outcome.replaceReply;
+          } else if (outcome?.appendToReply) {
+            textToSend = `${textToSend}\n\n${outcome.appendToReply}`;
           }
         }
 
