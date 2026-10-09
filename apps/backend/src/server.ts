@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { env } from "./config/env.js";
 import { appointmentsRoute } from "./appointments/appointments.route.js";
+import { configAssistantRoute } from "./config-assistant/config-assistant.route.js";
 import { adminRoute } from "./routes/admin.route.js";
 import { aiSettingsRoute } from "./routes/ai-settings.route.js";
 import { aiTestRoute } from "./routes/ai-test.route.js";
@@ -27,6 +28,10 @@ async function buildServer() {
   });
 
   app.addContentTypeParser(/^image\/(jpeg|png|webp)$/, { parseAs: "buffer" }, (_request, body, done) => {
+    done(null, body);
+  });
+
+  app.addContentTypeParser("application/pdf", { parseAs: "buffer" }, (_request, body, done) => {
     done(null, body);
   });
 
@@ -130,6 +135,7 @@ async function buildServer() {
   await app.register(productsRoute);
   await app.register(appointmentsRoute);
   await app.register(ordersRoute);
+  await app.register(configAssistantRoute);
   await app.register(aiSettingsRoute);
   await app.register(aiTestRoute);
   await app.register(routingRoute);

@@ -8,6 +8,47 @@
             </div>
             <button class="primary" id="save-agent">Enregistrer les modifications</button>
           </div>
+          <section id="config-assistant" class="panel config-assistant">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">ASSISTANT DE CONFIGURATION</p>
+                <h2>Remplir les informations de votre entreprise</h2>
+                <p class="muted">Donnez une source (texte, site web ou PDF) : l’assistant en extrait uniquement ce qui y est écrit. Il n’invente rien et vous validez avant d’enregistrer.</p>
+              </div>
+            </div>
+            <div class="ca-tabs" role="tablist">
+              <button type="button" class="ca-tab active" data-ca-tab="text" role="tab">Texte collé</button>
+              <button type="button" class="ca-tab" data-ca-tab="url" role="tab">Site web</button>
+              <button type="button" class="ca-tab" data-ca-tab="pdf" role="tab">Document PDF</button>
+            </div>
+            <div class="ca-pane" data-ca-pane="text">
+              <textarea id="ca-text" rows="5" maxlength="60000" placeholder="Collez ici le texte de votre site, de votre page Facebook (copiez la section « À propos »), d’une brochure…"></textarea>
+              <p class="field-hint">Pour une page Facebook : ouvrez-la, copiez les informations visibles puis collez-les ici. L’assistant ne se connecte pas à Facebook.</p>
+            </div>
+            <div class="ca-pane hidden" data-ca-pane="url">
+              <input id="ca-url" type="url" placeholder="https://www.monentreprise.com" />
+              <p class="field-hint">Seules les pages publiques sont lues (la page indiquée et quelques pages « contact », « à propos »…).</p>
+            </div>
+            <div class="ca-pane hidden" data-ca-pane="pdf">
+              <input id="ca-pdf" type="file" accept="application/pdf" />
+              <p class="field-hint">PDF avec texte sélectionnable, 5 Mo maximum.</p>
+            </div>
+            <div class="ca-actions">
+              <button type="button" class="primary" id="ca-analyze">Analyser la source</button>
+              <span id="ca-status" class="muted" aria-live="polite"></span>
+            </div>
+            <div id="ca-result" class="ca-result hidden">
+              <p class="ca-notice">Relisez chaque ligne : l’assistant peut se tromper. Rien n’est enregistré tant que vous ne cliquez pas sur « Enregistrer les modifications ».</p>
+              <div id="ca-missing" class="ca-missing hidden"></div>
+              <textarea id="ca-draft" rows="9" aria-label="Brouillon à relire et corriger"></textarea>
+              <details id="ca-warnings" class="ca-warnings hidden"><summary></summary><ul></ul></details>
+              <div class="ca-actions">
+                <button type="button" class="primary" id="ca-apply-replace">Utiliser ce texte</button>
+                <button type="button" class="ghost-button" id="ca-apply-append">Ajouter à la suite</button>
+                <button type="button" class="ghost-button" id="ca-discard">Ignorer</button>
+              </div>
+            </div>
+          </section>
           <form id="agent-form" class="panel settings-form">
             <label class="ai-global-toggle">
               <span>
