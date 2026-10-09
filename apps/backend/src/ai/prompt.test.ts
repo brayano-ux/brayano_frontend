@@ -59,3 +59,22 @@ describe("agenda section in the assistant prompt", () => {
     expect(prompt).toContain("- booking :");
   });
 });
+
+describe("language handling in the assistant prompt", () => {
+  const prompt = buildSystemPrompt({ ...baseSettings, products: [] });
+
+  it("replies in the prospect's language, including English and pidgin", () => {
+    expect(prompt).toContain("LANGUE DE RÉPONSE");
+    expect(prompt).toMatch(/anglais/i);
+    expect(prompt).toMatch(/pidgin/i);
+    expect(prompt).toContain("abeg");
+  });
+
+  it("no longer forces French-only replies", () => {
+    expect(prompt).not.toContain("Réponds en français, sauf si");
+  });
+
+  it("keeps the JSON contract", () => {
+    expect(prompt).toContain("leadData");
+  });
+});
