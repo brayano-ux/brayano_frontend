@@ -1,0 +1,125 @@
+<!-- VIEW: SETTINGS -->
+<section id="settings-view" class="view hidden">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">CONFIGURATION</p>
+      <h1>Paramètres</h1>
+      <p class="muted">Réglez le délai de réponse de l'agent et le routage de vos prospects.</p>
+    </div>
+    <button class="primary" id="save-settings">Enregistrer</button>
+  </div>
+
+  <div class="settings-stack">
+
+    <!-- ============ Délai de réponse ============ -->
+    <form id="delay-form" class="panel settings-card">
+      <div class="settings-card-head">
+        <h2>Délai de réponse de l'IA</h2>
+        <p class="muted">Un délai plus long rend les réponses moins robotiques et réduit le risque de restriction WhatsApp. Valeur par défaut : 3 secondes.</p>
+      </div>
+
+      <div class="delay-options" role="radiogroup" aria-label="Délai de réponse de l'IA">
+        <label class="delay-option">
+          <input type="radio" name="response-delay" value="3" checked />
+          <span>3 s<small>Par défaut</small></span>
+        </label>
+        <label class="delay-option">
+          <input type="radio" name="response-delay" value="5" />
+          <span>5 s<small>Modéré</small></span>
+        </label>
+        <label class="delay-option">
+          <input type="radio" name="response-delay" value="7" />
+          <span>7 s<small>Plus prudent</small></span>
+        </label>
+        <label class="delay-option">
+          <input type="radio" name="response-delay" value="60" />
+          <span>1 min<small>Réponse espacée</small></span>
+        </label>
+        <label class="delay-option">
+          <input type="radio" name="response-delay" value="120" />
+          <span>2 min<small>Réponse très espacée</small></span>
+        </label>
+      </div>
+    </form>
+
+    <!-- ============ Zones et responsables ============ -->
+    <section class="routing-settings" aria-labelledby="routing-title">
+      <div class="settings-card-head routing-head">
+        <h2 id="routing-title">Zones et responsables</h2>
+        <p class="muted">Définissez vos zones et les responsables qui reçoivent les prospects de chacune.</p>
+      </div>
+
+      <div class="routing-layout">
+        <!-- Liste (à gauche sur grand écran) -->
+        <div class="panel routing-list-panel">
+          <h3>Zones configurées</h3>
+          <div id="routing-locations-list"></div>
+        </div>
+
+        <!-- Formulaires (à droite sur grand écran) -->
+        <div class="routing-side">
+          <form id="location-form" class="panel routing-form">
+            <h3>Ajouter une zone</h3>
+            <label>
+              Nom de la zone
+              <input id="location-name" type="text" placeholder="Douala" required />
+            </label>
+            <label>
+              Ville
+              <input id="location-city" type="text" placeholder="Douala" required />
+            </label>
+            <label>
+              WhatsApp de la zone
+              <input id="location-recipient-whatsapp" type="text" inputmode="tel" placeholder="+237..." />
+              <span class="field-hint">Au format international, avec l'indicatif du pays.</span>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="primary">Enregistrer la zone</button>
+            </div>
+          </form>
+
+          <form id="responsible-form" class="panel routing-form">
+            <h3>Ajouter un responsable</h3>
+            <label>
+              Zone
+              <select id="responsible-location" required></select>
+            </label>
+            <label>
+              Nom du responsable
+              <input id="responsible-name" type="text" placeholder="Jean Dupont" required />
+            </label>
+            <label>
+              WhatsApp du responsable
+              <input id="responsible-whatsapp" type="text" inputmode="tel" placeholder="+237..." required />
+            </label>
+            <label class="checkbox-row">
+              <input id="responsible-active" type="checkbox" checked />
+              <span>Commercial actif</span>
+            </label>
+            <input id="responsible-id" type="hidden" />
+            <div class="form-actions">
+              <button type="submit" class="primary">Enregistrer le responsable</button>
+              <button type="button" id="cancel-responsible-edit" class="text-button hidden">Annuler la modification</button>
+            </div>
+          </form>
+
+          <form id="fallback-form" class="panel routing-fallback">
+            <h3>Fallback global</h3>
+            <p class="muted">Utilisé quand aucune zone ou aucun responsable ne correspond.</p>
+            <label>
+              Responsable de fallback
+              <select id="fallback-responsible"></select>
+            </label>
+            <label>
+              WhatsApp de fallback
+              <input id="fallback-whatsapp" type="text" inputmode="tel" placeholder="+237..." />
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="primary">Enregistrer le fallback</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

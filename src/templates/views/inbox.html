@@ -1,0 +1,28 @@
+<!-- VIEW: INBOX -->
+<section id="inbox-view" class="view hidden">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">RELATION CLIENT</p>
+      <h1>Boîte de réception</h1>
+      <p class="muted">Suivez et reprenez la main sur vos conversations.</p>
+    </div>
+    <span class="pill"><i aria-hidden="true"></i> Synchronisation active</span>
+  </div>
+
+  <div class="inbox-layout">
+    <section class="panel inbox-panel">
+      <div class="inbox-toolbar">
+        <strong id="inbox-total">Conversations</strong>
+        <button class="ghost-button">
+          Toutes
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div id="all-conversations" class="conversation-list" aria-label="Liste des conversations"></div>
+    </section>
+
+    <section id="conversation-detail" class="panel detail-panel">
+      <div class="empty-state">Sélectionnez une conversation pour afficher les messages.</div>
+    </section>
+  </div>
+</section>
