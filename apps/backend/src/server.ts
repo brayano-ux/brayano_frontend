@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import { env } from "./config/env.js";
+import { appointmentsRoute } from "./appointments/appointments.route.js";
 import { adminRoute } from "./routes/admin.route.js";
 import { aiSettingsRoute } from "./routes/ai-settings.route.js";
 import { aiTestRoute } from "./routes/ai-test.route.js";
@@ -126,6 +127,7 @@ async function buildServer() {
   await app.register(authRoute);
   await app.register(organizationsRoute);
   await app.register(productsRoute);
+  await app.register(appointmentsRoute);
   await app.register(aiSettingsRoute);
   await app.register(aiTestRoute);
   await app.register(routingRoute);

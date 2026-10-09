@@ -5,6 +5,7 @@ const templatePaths = [
   "./templates/views/inbox.html",
   "./templates/views/agent.html",
   "./templates/views/products.html",
+  "./templates/views/appointments.html",
   "./templates/views/settings.html",
   "./templates/views/whatsapp.html",
 ];
