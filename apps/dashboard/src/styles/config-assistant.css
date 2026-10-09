@@ -1,0 +1,18 @@
+/* Assistant de configuration (page Agent IA) */
+.config-assistant { display: grid; gap: 14px; padding: 22px; margin-bottom: 20px; }
+.config-assistant h2 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+.config-assistant textarea, .config-assistant input[type="url"] { width: 100%; box-sizing: border-box; }
+.config-assistant .field-hint { margin: 6px 0 0; font-size: 12px; }
+
+.ca-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.ca-tab { border: 1px solid rgba(120, 120, 140, 0.3); background: transparent; color: inherit; padding: 6px 14px; border-radius: 999px; font-size: 13px; cursor: pointer; }
+.ca-tab.active { background: rgba(91, 79, 233, 0.14); border-color: rgba(91, 79, 233, 0.5); font-weight: 700; }
+
+.ca-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ca-result { display: grid; gap: 12px; border-top: 1px solid rgba(120, 120, 140, 0.2); padding-top: 14px; }
+.ca-notice { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(230, 160, 20, 0.14); font-size: 13px; }
+.ca-missing { font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ca-chip { display: inline-block; padding: 3px 10px; border-radius: 999px; background: rgba(190, 60, 60, 0.12); font-size: 12px; font-weight: 600; }
+.ca-warnings { font-size: 12px; color: var(--muted, #6b7280); }
+.ca-warnings summary { cursor: pointer; }
+.ca-warnings ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }

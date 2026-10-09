@@ -12,6 +12,7 @@ import { initWhatsapp, loadWhatsApp } from "./features/whatsapp/whatsapp.js";
 import { initProducts, loadProducts } from "./features/products/products.js";
 import { initAppointments, loadAppointments } from "./features/appointments/appointments.js";
 import { initOrders, loadOrders } from "./features/orders/orders.js";
+import { initConfigAssistant } from "./features/config-assistant/config-assistant.js";
 import { isNetworkError } from "./services/api.js";
 import { showToast } from "./utils/dom.js";
 
@@ -70,6 +71,7 @@ function bootstrap() {
   initOverview();
   initInbox();
   initAgent();
+  initConfigAssistant();
   initProducts();
   initAppointments();
   initOrders();
