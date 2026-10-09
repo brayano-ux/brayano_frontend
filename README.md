@@ -35,6 +35,8 @@ python -m http.server 4173 --directory apps/dashboard
 ```
 Puis ouvrir `http://localhost:4173`. Le dashboard utilise l'API `http://localhost:3000` par défaut ; cette URL peut être remplacée avec `localStorage.setItem("brayano_api", "http://...")`.
 
+Quand Vercel déploie depuis la racine du dépôt, `index.html` charge le dashboard complet de `apps/dashboard`, y compris ses vues HTML chargées dynamiquement.
+
 ## Livraison Render
 
 - Le service backend doit conserver le disque persistant monté sur `/data`.
