@@ -80,7 +80,8 @@ function bootstrap() {
   initWhatsapp();
   initLogout();
   updateRealtimeHeader();
-  setView("overview", viewLoaders);
+  // Affiche seulement la vue : les données se chargent après authentification (onAuthenticated).
+  setView("overview");
   initAuthFlow(onAuthenticated);
 }
 
