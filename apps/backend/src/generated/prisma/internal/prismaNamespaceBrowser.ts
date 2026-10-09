@@ -69,7 +69,9 @@ export const ModelName = {
   Location: 'Location',
   Responsible: 'Responsible',
   OrganizationRoutingSettings: 'OrganizationRoutingSettings',
-  ProspectLead: 'ProspectLead'
+  ProspectLead: 'ProspectLead',
+  AppointmentSettings: 'AppointmentSettings',
+  Appointment: 'Appointment'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -381,6 +383,46 @@ export const ProspectLeadScalarFieldEnum = {
 export type ProspectLeadScalarFieldEnum = (typeof ProspectLeadScalarFieldEnum)[keyof typeof ProspectLeadScalarFieldEnum]
 
 
+export const AppointmentSettingsScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  enabled: 'enabled',
+  timezone: 'timezone',
+  slotMinutes: 'slotMinutes',
+  bufferMinutes: 'bufferMinutes',
+  capacity: 'capacity',
+  minNoticeMinutes: 'minNoticeMinutes',
+  horizonDays: 'horizonDays',
+  workingHours: 'workingHours',
+  closedDates: 'closedDates',
+  serviceLabel: 'serviceLabel',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AppointmentSettingsScalarFieldEnum = (typeof AppointmentSettingsScalarFieldEnum)[keyof typeof AppointmentSettingsScalarFieldEnum]
+
+
+export const AppointmentScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  conversationId: 'conversationId',
+  contactName: 'contactName',
+  contactPhone: 'contactPhone',
+  contactJid: 'contactJid',
+  service: 'service',
+  notes: 'notes',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  status: 'status',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AppointmentScalarFieldEnum = (typeof AppointmentScalarFieldEnum)[keyof typeof AppointmentScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -395,6 +437,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {

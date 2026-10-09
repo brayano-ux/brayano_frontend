@@ -45,6 +45,21 @@ describe("product catalog in the assistant prompt", () => {
   });
 });
 
+describe("agenda section in the assistant prompt", () => {
+  it("leaves the prompt untouched when the agenda is disabled", () => {
+    const without = buildSystemPrompt({ ...baseSettings, products: [] });
+    expect(without).not.toContain("PRISE DE RENDEZ-VOUS");
+    expect(without).not.toContain("booking");
+    expect(buildSystemPrompt({ ...baseSettings, products: [], agenda: null })).toBe(without);
+  });
+
+  it("injects free slots and the booking field when the agenda is enabled", () => {
+    const prompt = buildSystemPrompt({ ...baseSettings, products: [], agenda: "PRISE DE RENDEZ-VOUS (AGENDA ACTIVÉ)\n- 2026-10-13 : 09:00–12:00" });
+    expect(prompt).toContain("2026-10-13 : 09:00–12:00");
+    expect(prompt).toContain("- booking :");
+  });
+});
+
 describe("language handling in the assistant prompt", () => {
   const prompt = buildSystemPrompt({ ...baseSettings, products: [] });
 

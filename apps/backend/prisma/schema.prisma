@@ -24,6 +24,8 @@ model Organization {
   routingSettings   OrganizationRoutingSettings?
   prospectLeads     ProspectLead[]
   products          Product[]
+  appointmentSettings AppointmentSettings?
+  appointments      Appointment[]
   billingPayments   BillingPayment[]
   billingSubscription BillingSubscription?
   freeAiResponsesRemaining Int @default(0) @map("free_ai_responses_remaining")
@@ -436,4 +438,60 @@ model ProspectLead {
   @@index([whatsappNumber])
   @@index([organizationId, status])
   @@map("prospect_leads")
+}
+
+enum AppointmentStatus {
+  BOOKED
+  CANCELLED
+  DONE
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  AI
+  HUMAN
+}
+
+model AppointmentSettings {
+  id                  String   @id @default(uuid())
+  organizationId      String   @unique @map("organization_id")
+  enabled             Boolean  @default(false)
+  timezone            String   @default("Africa/Douala")
+  slotMinutes         Int      @default(30) @map("slot_minutes")
+  bufferMinutes       Int      @default(0) @map("buffer_minutes")
+  capacity            Int      @default(1)
+  minNoticeMinutes    Int      @default(60) @map("min_notice_minutes")
+  horizonDays         Int      @default(30) @map("horizon_days")
+  workingHours        Json     @map("working_hours")
+  closedDates         Json?    @map("closed_dates")
+  serviceLabel        String?  @map("service_label")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("appointment_settings")
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  organizationId String            @map("organization_id")
+  conversationId String?           @map("conversation_id")
+  contactName    String?           @map("contact_name")
+  contactPhone   String?           @map("contact_phone")
+  contactJid     String?           @map("contact_jid")
+  service        String?
+  notes          String?
+  startsAt       DateTime          @map("starts_at")
+  endsAt         DateTime          @map("ends_at")
+  status         AppointmentStatus @default(BOOKED)
+  source         AppointmentSource @default(AI)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startsAt])
+  @@index([organizationId, contactJid, status])
+  @@map("appointments")
 }

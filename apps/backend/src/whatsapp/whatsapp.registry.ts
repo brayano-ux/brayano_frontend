@@ -14,6 +14,7 @@ import {
   shouldReactivateAiAfterHandoff,
   updateConversationQualification,
 } from "../conversations/conversations.service.js";
+import { applyAiBooking, loadAgendaPrompt } from "../appointments/appointments.service.js";
 import { withConversationSendLock } from "../conversations/conversation-send-lock.js";
 import { prisma } from "../database/client.js";
 import { getPlatformSuspension } from "../organizations/platform-suspension.service.js";
@@ -190,7 +191,17 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
         return;
       }
       const products = await listProductsForAssistant(organizationId);
-      const systemPrompt = buildSystemPrompt({ ...settings, knownLeadData: previousLeadData, products });
+      // L'agenda est optionnel : toute erreur ici ne doit jamais empêcher la réponse.
+      const agenda = await loadAgendaPrompt(organizationId).catch((error) => {
+        console.error(`❌ [agenda:${organizationId}] Chargement de l'agenda ignoré :`, error);
+        return null;
+      });
+      const systemPrompt = buildSystemPrompt({
+        ...settings,
+        knownLeadData: previousLeadData,
+        products,
+        agenda: agenda?.section ?? null,
+      });
       const history = await getRecentHistoryForAi(conversation.id);
       const aiReply = await getAiOrchestrator().getReply(conversation.id, systemPrompt, history);
 
@@ -282,20 +293,39 @@ function getOrCreateProvider(organizationId: string): WhatsAppProvider {
           return false;
         }
 
+        let textToSend = outboundText;
+        if (agenda && aiReply.booking) {
+          const leadName = typeof mergedLeadData.name === "string" ? mergedLeadData.name : null;
+          const phone = message.fromJid.endsWith("@s.whatsapp.net") ? message.fromJid.split("@")[0] ?? null : null;
+          const outcome = await applyAiBooking(agenda, aiReply.booking, {
+            organizationId,
+            conversationId: conversation.id,
+            contactJid: message.fromJid,
+            contactName: leadName,
+            contactPhone: phone,
+          });
+          if (outcome?.replaceReply) {
+            textToSend = outcome.replaceReply;
+          } else if (outcome?.appendToReply) {
+            textToSend = `${outboundText}\n\n${outcome.appendToReply}`;
+          }
+        }
+
         if (imageUrl) {
           if (selectedProduct) {
-            await instance.sendMessage(message.fromJid, outboundText);
+            await instance.sendMessage(message.fromJid, textToSend);
             await instance.sendImage(message.fromJid, imageUrl, buildProductImageCaption(selectedProduct));
           } else {
             await instance.sendImage(message.fromJid, imageUrl, aiReply.reply);
+            if (textToSend !== outboundText) await instance.sendMessage(message.fromJid, textToSend);
           }
         } else {
-          await instance.sendMessage(message.fromJid, outboundText);
+          await instance.sendMessage(message.fromJid, textToSend);
         }
 
         await recordOutboundMessage({
           conversationId: conversation.id,
-          text: outboundText,
+          text: textToSend,
           author: "AI",
         });
         return true;

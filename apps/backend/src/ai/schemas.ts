@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { bookingRequestSchema } from "../appointments/booking.js";
 
 /**
  * NE JAMAIS FAIRE CONFIANCE AU JSON RENVOYÉ PAR LE LLM (Phase 0).
@@ -17,6 +18,7 @@ export const aiReplySchema = z.object({
   leadData: z.record(z.string(), z.unknown()).default({}),
   productId: z.string().uuid().optional().or(z.literal("")),
   imageUrl: z.string().url().optional().or(z.literal("")),
+  booking: bookingRequestSchema,
 });
 
 export type AIReply = z.infer<typeof aiReplySchema>;
