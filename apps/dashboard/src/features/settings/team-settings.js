@@ -3,6 +3,8 @@ import { $, escapeHtml, showToast } from "../../utils/dom.js";
 import { formatDateTime } from "../../utils/format.js";
 import { getState } from "../../state/store.js";
 
+/** Équipe : le propriétaire ajoute, met en pause ou retire des employés qui partagent la boîte de réception. */
+
 let members = [];
 let maxMembers = 10;
 
@@ -52,7 +54,7 @@ async function act(member, action) {
       showToast("Mot de passe modifié. Communiquez-le à l'employé.", "success");
     }
     if (action === "remove") {
-      if (!window.confirm(`Retirer ${member.name || member.email} ? Il ne pourra plus se connecter. Les réponses passées restent dans les conversations.`)) return;
+      if (!window.confirm(`Retirer ${member.name || member.email} ? Il ne pourra plus se connecter. Ses réponses passées restent dans les conversations.`)) return;
       await api(`${base()}/${member.id}`, { method: "DELETE" });
       showToast("Employé retiré.", "success");
     }

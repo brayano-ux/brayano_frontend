@@ -3,6 +3,7 @@ import { formatClock, formatFullDate } from "../../utils/format.js";
 import { getState } from "../../state/store.js";
 import { APP_CONFIG } from "../../config.js";
 
+/** Garde-fous « modifications non enregistrées » : vue → () => true si on peut quitter la vue. */
 const leaveGuards = new Map();
 
 export function registerLeaveGuard(view, canLeave) {
@@ -17,6 +18,14 @@ function currentView() {
   return visible ? visible.id.replace(/-view$/, "") : null;
 }
 
+/**
+ * Affiche/masque les vues (`.view`) et met en évidence l'item de nav actif.
+ * Si la vue actuelle a des modifications non enregistrées, l'utilisateur doit confirmer
+ * (y compris pour « recharger » la même vue, qui écraserait le formulaire).
+ * @param {string} view identifiant de vue ("overview", "inbox", "agent", ...)
+ * @param {Record<string, () => void>} onViewShown callbacks de chargement par vue
+ * @returns {boolean} false si la navigation a été annulée
+ */
 export function setView(view, onViewShown = {}) {
   const current = currentView();
   const guard = current ? leaveGuards.get(current) : null;
@@ -28,6 +37,7 @@ export function setView(view, onViewShown = {}) {
     if (active) item.setAttribute("aria-current", "page");
     else item.removeAttribute("aria-current");
   });
+  // Les vues secondaires (produits, rendez-vous…) activent « Plus » sur mobile.
   $("#tab-more")?.classList.toggle("active", !$(".tab-item[data-view].active"));
   window.scrollTo({ top: 0 });
   onViewShown[view]?.();
@@ -48,8 +58,12 @@ export function updateRealtimeHeader() {
   }
 }
 
+/**
+ * Câble les boutons de navigation (`data-view` / `data-view-target`) et
+ * le comportement du menu mobile (sidebar coulissante + overlay).
+ */
 export function initNavigation(onViewShown) {
-  $$('[data-view], [data-view-target]').forEach((element) => {
+  $$("[data-view], [data-view-target]").forEach((element) => {
     element.onclick = () => setView(element.dataset.view || element.dataset.viewTarget, onViewShown);
   });
 
