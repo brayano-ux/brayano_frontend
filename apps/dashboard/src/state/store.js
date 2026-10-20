@@ -1,10 +1,5 @@
 import { readOrganizationId } from "../services/storage.js";
 
-/**
- * Micro state-store maison : remplace les variables globales éparpillées
- * de l'ancien app.js par un état unique, lisible et observable.
- * Volontairement minimaliste (pas de dépendance externe).
- */
 const state = {
   organizationId: readOrganizationId(),
   organizationName: "Brayano",

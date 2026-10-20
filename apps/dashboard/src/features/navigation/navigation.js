@@ -3,12 +3,24 @@ import { formatClock, formatFullDate } from "../../utils/format.js";
 import { getState } from "../../state/store.js";
 import { APP_CONFIG } from "../../config.js";
 
-/**
- * Affiche/masque les vues (`.view`) et met en évidence l'item de nav actif.
- * @param {string} view identifiant de vue ("overview", "inbox", "agent", ...)
- * @param {Record<string, () => void>} onViewShown callbacks de chargement par vue
- */
+const leaveGuards = new Map();
+
+export function registerLeaveGuard(view, canLeave) {
+  leaveGuards.set(view, canLeave);
+}
+
+export const UNSAVED_CHANGES_MESSAGE =
+  "Vous avez des modifications non enregistrées sur cette page. Si vous continuez, elles seront perdues.\n\nQuitter sans enregistrer ?";
+
+function currentView() {
+  const visible = $$(".view").find((section) => !section.classList.contains("hidden"));
+  return visible ? visible.id.replace(/-view$/, "") : null;
+}
+
 export function setView(view, onViewShown = {}) {
+  const current = currentView();
+  const guard = current ? leaveGuards.get(current) : null;
+  if (guard && !guard()) return false;
   $$(".view").forEach((section) => section.classList.toggle("hidden", section.id !== `${view}-view`));
   $$(".nav-item[data-view], .tab-item[data-view]").forEach((item) => {
     const active = item.dataset.view === view;
@@ -16,10 +28,10 @@ export function setView(view, onViewShown = {}) {
     if (active) item.setAttribute("aria-current", "page");
     else item.removeAttribute("aria-current");
   });
-  // Les vues secondaires (produits, rendez-vous…) activent « Plus » sur mobile.
   $("#tab-more")?.classList.toggle("active", !$(".tab-item[data-view].active"));
   window.scrollTo({ top: 0 });
   onViewShown[view]?.();
+  return true;
 }
 
 export function updateRealtimeHeader() {
@@ -36,12 +48,8 @@ export function updateRealtimeHeader() {
   }
 }
 
-/**
- * Câble les boutons de navigation (`data-view` / `data-view-target`) et
- * le comportement du menu mobile (sidebar coulissante + overlay).
- */
 export function initNavigation(onViewShown) {
-  $$("[data-view], [data-view-target]").forEach((element) => {
+  $$('[data-view], [data-view-target]').forEach((element) => {
     element.onclick = () => setView(element.dataset.view || element.dataset.viewTarget, onViewShown);
   });
 

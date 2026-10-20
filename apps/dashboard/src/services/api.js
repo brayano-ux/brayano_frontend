@@ -1,10 +1,6 @@
 import { getApiBaseUrl } from "../config.js";
 import { readSession } from "./storage.js";
 
-/**
- * Client HTTP unique du dashboard. Toute feature métier passe par ici
- * afin de garder l'authentification et la gestion d'erreurs cohérentes.
- */
 export async function api(path, options = {}) {
   const session = readSession();
   const headers = new Headers(options.headers || {});

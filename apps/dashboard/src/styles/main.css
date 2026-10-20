@@ -1,9 +1,4 @@
-/**
- * Point d'entrée CSS du dashboard Brayano AI.
- * L'ordre des imports reproduit la cascade de l'ancien fichier
- * monolithique : tokens -> base -> auth -> layout -> composants
- * partagés -> styles propres à chaque vue.
- */
+# Point d'entrée CSS du dashboard Brayano AI.
 @import "./tokens.css";
 @import "./base.css";
 @import "./auth.css";
@@ -16,4 +11,5 @@
 @import "./products.css";
 @import "./appointments.css";
 @import "./orders.css";
+@import "./broadcasts.css";
 @import "./config-assistant.css";
