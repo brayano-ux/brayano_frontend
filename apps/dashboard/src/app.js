@@ -20,6 +20,12 @@ import { readSession } from "./services/storage.js";
 import { isNetworkError } from "./services/api.js";
 import { showToast } from "./utils/dom.js";
 
+/**
+ * Point d'entrée du dashboard. Assemble les features indépendantes
+ * (auth, navigation, overview, inbox, agent, products, settings, whatsapp) sans
+ * qu'aucune d'elles n'ait besoin de connaître les autres directement.
+ */
+
 async function refreshAll() {
   await Promise.all([refreshOverview(openConversation), loadPlatformSuspension()]);
 }

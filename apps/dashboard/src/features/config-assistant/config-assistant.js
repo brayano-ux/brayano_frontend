@@ -16,7 +16,7 @@ function renderResult(analysis) {
 
   const missing = $("#ca-missing");
   if (analysis.missing?.length) {
-    missing.innerHTML = `<strong>Non trouvé dans votre source — à compléter vous-même :</strong> ${analysis.missing.map((label) => `<span class="ca-chip">${escapeHtml(label)}</span>`).join(" ")}`;
+    missing.innerHTML = `<strong>Non trouvé dans votre source — à compléter vous-même :</strong> ${analysis.missing.map((label) => `<span class="ca-chip">${escapeHtml(label)}</span>`).join("")}`;
     missing.classList.remove("hidden");
   } else {
     missing.classList.add("hidden");
@@ -24,7 +24,7 @@ function renderResult(analysis) {
 
   const warnings = $("#ca-warnings");
   if (analysis.warnings?.length) {
-    warnings.querySelector("summary").textContent = `${analysis.warnings.length} élément${analysis.warnings.length > 1 ? "s" : ""} écarté${analysis.warnings.length > 1 ? "s" : ""} car non vérifié.`;
+    warnings.querySelector("summary").textContent = `${analysis.warnings.length} élément${analysis.warnings.length > 1 ? "s" : ""} écarté${analysis.warnings.length > 1 ? "s" : ""} car non vérifiable${analysis.warnings.length > 1 ? "s" : ""}`;
     warnings.querySelector("ul").innerHTML = analysis.warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join("");
     warnings.classList.remove("hidden");
   } else {
@@ -59,7 +59,7 @@ async function analyze() {
   }
 
   button.disabled = true;
-  status.textContent = "Analyse en cours…";
+  status.textContent = "Analyse en cours… (jusqu’à 30 secondes)";
   try {
     const { analysis } = await request;
     if (!analysis) throw new Error("Réponse inattendue du serveur.");
@@ -80,7 +80,7 @@ function applyDraft(mode) {
   target.value = mode === "append" && target.value.trim() ? `${target.value.trim()}\n\n${draft}` : draft;
   target.dispatchEvent(new Event("input", { bubbles: true }));
   target.scrollIntoView({ behavior: "smooth", block: "center" });
-  showToast("Texte placé dans « Informations sur votre activité ».", "success");
+  showToast("Texte placé dans « Informations sur votre activité ». Relisez puis cliquez sur « Enregistrer les modifications ».", "success");
 }
 
 export function initConfigAssistant() {
